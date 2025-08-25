@@ -1,0 +1,173 @@
+# Building Energy Optimizer - .gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+.env/
+
+# Environment Variables
+.env
+.env.local
+.env.production
+.env.test
+*.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+building_energy.db
+
+# Logs
+logs/
+*.log
+log.txt
+
+# Data Files
+data/raw/
+data/processed/
+data/external/
+*.csv
+*.xlsx
+*.json
+
+# Model Files
+models/
+trained_model.joblib
+*.pkl
+*.joblib
+*.h5
+*.model
+
+# Backups
+backups/
+*.backup
+*.bak
+
+# Temporary Files
+temp/
+tmp/
+*.tmp
+.cache/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Documentation
+docs/_build/
+site/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# Application specific
+config/local.yaml
+config/production.yaml
+prometheus_data/
+grafana_data/
+
+# Secrets
+secrets/
+certificates/
+*.pem
+*.key
+*.cert
+
+# User uploads
+uploads/
+user_data/
+
+# Generated files
+VERSION
+RELEASE_NOTES.md
+CHANGELOG_AUTO.md
+
+# Editor configs
+.vscode/settings.json
+.idea/workspace.xml
+
+# OS generated files
+.DS_Store?
+ehthumbs_vista.db
+
+# Package lock files (keep requirements.txt)
+Pipfile.lock
+poetry.lock
+
+# Monitoring data
+monitoring/data/
+
+# Cache directories
+.cache
+.pytest_cache
+.mypy_cache
+.ruff_cache
+
+# Profiling data
+*.prof
+
+# Local test files
+test_*.py
+debug_*.py
+scratch.py

@@ -1,0 +1,67 @@
+# Development dependencies for Building Energy Optimizer
+# These are additional packages needed for development, testing, and code quality
+
+# Testing framework and coverage
+pytest>=7.0.0
+pytest-cov>=4.0.0
+pytest-xdist>=3.0.0          # Parallel test execution
+pytest-benchmark>=4.0.0       # Performance benchmarking
+pytest-mock>=3.10.0          # Mocking utilities
+coverage>=7.0.0              # Code coverage analysis
+
+# Code quality and formatting
+black>=23.0.0                # Code formatter
+isort>=5.12.0                # Import sorting
+flake8>=6.0.0                # Linting
+mypy>=1.0.0                  # Type checking
+autopep8>=2.0.0              # Auto code formatting
+
+# Security
+bandit>=1.7.0                # Security linting
+safety>=2.3.0                # Security vulnerability checking
+
+# Documentation
+sphinx>=6.0.0                # Documentation generator
+sphinx-rtd-theme>=1.2.0      # ReadTheDocs theme
+myst-parser>=0.18.0          # Markdown parser for Sphinx
+
+# Development tools
+pre-commit>=3.0.0            # Git hooks
+twine>=4.0.0                 # Package uploading
+build>=0.10.0                # Package building
+wheel>=0.40.0                # Wheel building
+
+# Jupyter and notebooks (for analysis)
+jupyter>=1.0.0
+notebook>=6.5.0
+ipywidgets>=8.0.0
+
+# Performance profiling
+memory-profiler>=0.60.0      # Memory usage profiling
+line-profiler>=4.0.0         # Line-by-line profiling
+py-spy>=0.3.0                # Sampling profiler
+
+# API testing
+httpx>=0.24.0                # Async HTTP client for testing
+requests-mock>=1.10.0        # HTTP request mocking
+
+# Database testing
+sqlalchemy-utils>=0.40.0     # Database utilities
+factory-boy>=3.2.0           # Test data generation
+
+# Debugging
+pdb++>=0.10.0                # Enhanced debugger
+icecream>=2.1.0              # Debug printing
+
+# Monitoring and metrics (development versions)
+prometheus-client>=0.16.0    # Prometheus metrics
+grafana-api>=1.0.0           # Grafana integration (optional)
+
+# Load testing
+locust>=2.14.0               # Load testing framework
+
+# Development utilities
+watchdog>=3.0.0              # File system monitoring
+python-dotenv>=1.0.0         # Environment variable loading
+rich>=13.0.0                 # Rich text and beautiful formatting
+typer>=0.9.0                 # CLI framework

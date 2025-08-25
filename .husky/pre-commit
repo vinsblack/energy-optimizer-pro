@@ -1,0 +1,78 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# 🏢⚡ Energy Optimizer Pro - Pre-commit Hook
+# ===========================================
+
+echo "🔍 Running pre-commit checks..."
+
+# Frontend checks
+echo "📦 Checking frontend..."
+cd frontend
+
+# Run linting
+npm run lint || {
+  echo "❌ Frontend linting failed!"
+  exit 1
+}
+
+# Run type checking
+npm run type-check || {
+  echo "❌ Frontend type checking failed!"
+  exit 1
+}
+
+# Run tests (quick)
+npm run test:ci || {
+  echo "❌ Frontend tests failed!"
+  exit 1
+}
+
+cd ..
+
+# Backend checks
+echo "🐍 Checking backend..."
+cd backend
+
+# Activate virtual environment
+if [ -f "venv/bin/activate" ]; then
+  source venv/bin/activate
+elif [ -f "venv/Scripts/activate" ]; then
+  source venv/Scripts/activate
+fi
+
+# Run linting
+flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics || {
+  echo "❌ Backend linting failed!"
+  exit 1
+}
+
+# Check code formatting
+black --check . || {
+  echo "❌ Backend code formatting failed!"
+  echo "💡 Run: cd backend && black ."
+  exit 1
+}
+
+# Check import sorting
+isort --check-only . || {
+  echo "❌ Backend import sorting failed!"
+  echo "💡 Run: cd backend && isort ."
+  exit 1
+}
+
+# Run type checking
+mypy app/ --ignore-missing-imports || {
+  echo "⚠️ Backend type checking has warnings"
+  # Don't fail on mypy warnings, just warn
+}
+
+# Run quick tests
+python -m pytest tests/ -x --tb=short || {
+  echo "❌ Backend tests failed!"
+  exit 1
+}
+
+cd ..
+
+echo "✅ All pre-commit checks passed!"

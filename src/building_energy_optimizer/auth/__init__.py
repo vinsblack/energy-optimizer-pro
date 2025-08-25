@@ -1,0 +1,54 @@
+"""
+Authentication and security module for Building Energy Optimizer.
+"""
+from .security import (
+    SecurityManager,
+    RateLimiter,
+    AuditLogger,
+    InputValidator,
+    User,
+    UserCreate,
+    UserLogin,
+    Token,
+    TokenData,
+    APIKey,
+    get_current_user,
+    get_current_active_user,
+    get_current_superuser,
+    require_auth,
+    check_rate_limit,
+    rate_limit_middleware,
+    SecurityMiddleware,
+    verify_api_key,
+    add_security_headers,
+    validate_password_strength,
+    generate_secure_filename,
+    validate_file_upload,
+    check_permissions
+)
+
+__all__ = [
+    'SecurityManager',
+    'RateLimiter', 
+    'AuditLogger',
+    'InputValidator',
+    'User',
+    'UserCreate',
+    'UserLogin',
+    'Token',
+    'TokenData',
+    'APIKey',
+    'get_current_user',
+    'get_current_active_user',
+    'get_current_superuser',
+    'require_auth',
+    'check_rate_limit',
+    'rate_limit_middleware',
+    'SecurityMiddleware',
+    'verify_api_key',
+    'add_security_headers',
+    'validate_password_strength',
+    'generate_secure_filename',
+    'validate_file_upload',
+    'check_permissions'
+]

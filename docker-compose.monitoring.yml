@@ -1,0 +1,435 @@
+# 🏢⚡ Energy Optimizer Pro - Monitoring Stack
+# =============================================
+# Advanced monitoring with Prometheus, Grafana, and Alertmanager
+
+version: '3.8'
+
+services:
+  # ================================
+  # 📊 Prometheus - Metrics Collection
+  # ================================
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: energy_optimizer_prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/rules:/etc/prometheus/rules:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--storage.tsdb.retention.size=10GB'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    networks:
+      - energy_optimizer_network
+
+  # ================================
+  # 🎨 Grafana - Visualization
+  # ================================
+  grafana:
+    image: grafana/grafana:10.1.0
+    container_name: energy_optimizer_grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource,grafana-worldmap-panel
+      - GF_RENDERING_SERVER_URL=http://renderer:8081/render
+      - GF_RENDERING_CALLBACK_URL=http://grafana:3000/
+      - GF_LOG_FILTERS=rendering:debug
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/dashboard-files:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    networks:
+      - energy_optimizer_network
+
+  # ================================
+  # 🚨 Alertmanager - Alert Management
+  # ================================
+  alertmanager:
+    image: prom/alertmanager:v0.26.0
+    container_name: energy_optimizer_alertmanager
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+      - '--web.route-prefix=/'
+    networks:
+      - energy_optimizer_network
+
+  # ================================
+  # 🖥️ Node Exporter - System Metrics
+  # ================================
+  node-exporter:
+    image: prom/node-exporter:v1.6.1
+    container_name: energy_optimizer_node_exporter
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+      - /run/systemd/private:/run/systemd/private:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+      - '--collector.systemd'
+      - '--collector.systemd.unit-include=(docker|ssh|cron|systemd-logind|systemd-timesyncd).service'
+    networks:
+      - energy_optimizer_network
+
+  # ================================
+  # 🐳 cAdvisor - Container Metrics
+  # ================================
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    container_name: energy_optimizer_cadvisor
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
+    networks:
+      - energy_optimizer_network
+
+  # ================================
+  # 🗄️ PostgreSQL Exporter
+  # ================================
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.13.2
+    container_name: energy_optimizer_postgres_exporter
+    restart: unless-stopped
+    ports:
+      - "9187:9187"
+    environment:
+      - DATA_SOURCE_NAME=postgresql://energy_user:energy_password_2024@postgres:5432/energy_optimizer?sslmode=disable
+    depends_on:
+      - postgres
+    networks:
+      - energy_optimizer_network
+
+  # ================================
+  # 🔴 Redis Exporter
+  # ================================
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.54.0
+    container_name: energy_optimizer_redis_exporter
+    restart: unless-stopped
+    ports:
+      - "9121:9121"
+    environment:
+      - REDIS_ADDR=redis://redis:6379
+    depends_on:
+      - redis
+    networks:
+      - energy_optimizer_network
+
+  # ================================
+  # 🌐 Nginx Exporter
+  # ================================
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:0.11.0
+    container_name: energy_optimizer_nginx_exporter
+    restart: unless-stopped
+    ports:
+      - "9113:9113"
+    command:
+      - '-nginx.scrape-uri=http://nginx:8080/stub_status'
+    depends_on:
+      - nginx
+    networks:
+      - energy_optimizer_network
+
+  # ================================
+  # 📋 Loki - Log Aggregation
+  # ================================
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: energy_optimizer_loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - energy_optimizer_network
+
+  # ================================
+  # 📝 Promtail - Log Collection
+  # ================================
+  promtail:
+    image: grafana/promtail:2.9.0
+    container_name: energy_optimizer_promtail
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - energy_optimizer_network
+
+  # ================================
+  # 🖼️ Grafana Image Renderer
+  # ================================
+  renderer:
+    image: grafana/grafana-image-renderer:3.8.1
+    container_name: energy_optimizer_renderer
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ENABLE_METRICS: 'true'
+      HTTP_PORT: 8081
+    networks:
+      - energy_optimizer_network
+
+  # ================================
+  # 📊 Grafana Pyroscope - Profiling
+  # ================================
+  pyroscope:
+    image: grafana/pyroscope:1.3.0
+    container_name: energy_optimizer_pyroscope
+    restart: unless-stopped
+    ports:
+      - "4040:4040"
+    volumes:
+      - pyroscope_data:/var/lib/pyroscope
+    networks:
+      - energy_optimizer_network
+
+  # ================================
+  # 🔍 Jaeger - Distributed Tracing
+  # ================================
+  jaeger:
+    image: jaegertracing/all-in-one:1.48
+    container_name: energy_optimizer_jaeger
+    restart: unless-stopped
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686"
+      - "14268:14268"
+      - "14250:14250"
+      - "9411:9411"
+    environment:
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+      - COLLECTOR_OTLP_ENABLED=true
+    volumes:
+      - jaeger_data:/badger
+    networks:
+      - energy_optimizer_network
+
+  # ================================
+  # 📈 Elasticsearch - Log Storage (Optional)
+  # ================================
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.9.0
+    container_name: energy_optimizer_elasticsearch
+    restart: unless-stopped
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - energy_optimizer_network
+    profiles:
+      - elastic
+
+  # ================================
+  # 📋 Kibana - Elasticsearch UI (Optional)
+  # ================================
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.9.0
+    container_name: energy_optimizer_kibana
+    restart: unless-stopped
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD=changeme
+    depends_on:
+      - elasticsearch
+    networks:
+      - energy_optimizer_network
+    profiles:
+      - elastic
+
+  # ================================
+  # ⚡ InfluxDB - Time Series DB (Optional)
+  # ================================
+  influxdb:
+    image: influxdb:2.7
+    container_name: energy_optimizer_influxdb
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=admin_password
+      - DOCKER_INFLUXDB_INIT_ORG=energy-optimizer
+      - DOCKER_INFLUXDB_INIT_BUCKET=metrics
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=energy-optimizer-token
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+    networks:
+      - energy_optimizer_network
+    profiles:
+      - influx
+
+  # ================================
+  # 📊 Grafana Oncall - Incident Management (Optional)
+  # ================================
+  grafana-oncall:
+    image: grafana/oncall:v1.3.0
+    container_name: energy_optimizer_oncall
+    restart: unless-stopped
+    ports:
+      - "8082:8080"
+    environment:
+      - DATABASE_TYPE=sqlite3
+      - DJANGO_SETTINGS_MODULE=settings.hobby
+      - SECRET_KEY=energy-optimizer-oncall-secret
+      - FEATURE_PROMETHEUS_EXPORTER_ENABLED=True
+    volumes:
+      - oncall_data:/var/lib/oncall
+    networks:
+      - energy_optimizer_network
+    profiles:
+      - oncall
+
+  # ================================
+  # 🔔 Webhook Receiver (Optional)
+  # ================================
+  webhook-receiver:
+    image: adnanh/webhook:2.8.1
+    container_name: energy_optimizer_webhook
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./monitoring/hooks.json:/etc/webhook/hooks.json:ro
+      - ./scripts:/scripts:ro
+    command: ["-verbose", "-hooks=/etc/webhook/hooks.json", "-hotreload"]
+    networks:
+      - energy_optimizer_network
+    profiles:
+      - webhooks
+
+# ================================
+# 💾 Volumes
+# ================================
+volumes:
+  prometheus_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/prometheus
+  
+  grafana_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/grafana
+  
+  alertmanager_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/alertmanager
+  
+  loki_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/loki
+  
+  jaeger_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/jaeger
+  
+  pyroscope_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/pyroscope
+  
+  elasticsearch_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/elasticsearch
+  
+  influxdb_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/influxdb
+  
+  oncall_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/oncall
+
+# ================================
+# 🌐 Networks
+# ================================
+networks:
+  energy_optimizer_network:
+    external: true

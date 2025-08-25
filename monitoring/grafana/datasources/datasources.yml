@@ -1,0 +1,178 @@
+# 🏢⚡ Energy Optimizer Pro - Grafana Datasources
+# ===============================================
+# Automated datasource provisioning
+
+apiVersion: 1
+
+# ================================
+# 📊 Data Sources Configuration
+# ================================
+datasources:
+  # ================================
+  # 📈 Prometheus - Metrics
+  # ================================
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+    jsonData:
+      httpMethod: POST
+      manageAlerts: true
+      prometheusType: Prometheus
+      prometheusVersion: 2.47.0
+      cacheLevel: 'High'
+      disableMetricsLookup: false
+      incrementalQuerying: true
+      exemplarTraceIdDestinations:
+        - name: traceID
+          datasourceUid: jaeger
+      httpHeaderName1: 'X-Custom-Header'
+    secureJsonData:
+      httpHeaderValue1: 'energy-optimizer-pro'
+    uid: prometheus
+
+  # ================================
+  # 📝 Loki - Logs
+  # ================================
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    editable: true
+    jsonData:
+      maxLines: 1000
+      derivedFields:
+        - name: "TraceID"
+          matcherRegex: "trace_id=(\\w+)"
+          url: "$${__value.raw}"
+          datasourceUid: jaeger
+    uid: loki
+
+  # ================================
+  # 🔍 Jaeger - Tracing
+  # ================================
+  - name: Jaeger
+    type: jaeger
+    access: proxy
+    url: http://jaeger:16686
+    editable: true
+    jsonData:
+      tracesToLogs:
+        datasourceUid: loki
+        tags: ['job', 'instance', 'pod', 'namespace']
+        mappedTags: [{ key: 'service.name', value: 'service' }]
+        mapTagNamesEnabled: false
+        spanStartTimeShift: '1h'
+        spanEndTimeShift: '1h'
+        filterByTraceID: false
+        filterBySpanID: false
+      tracesToMetrics:
+        datasourceUid: prometheus
+        tags: [{ key: 'service.name', value: 'service' }, { key: 'operation' }]
+        queries:
+          - name: 'Sample query'
+            query: 'sum(rate(traces_spanmetrics_latency_bucket{$$__tags}[5m]))'
+      nodeGraph:
+        enabled: true
+    uid: jaeger
+
+  # ================================
+  # ⚡ InfluxDB - Time Series (Optional)
+  # ================================
+  - name: InfluxDB
+    type: influxdb
+    access: proxy
+    url: http://influxdb:8086
+    editable: true
+    jsonData:
+      version: Flux
+      organization: energy-optimizer
+      defaultBucket: metrics
+      tlsSkipVerify: false
+    secureJsonData:
+      token: energy-optimizer-token
+    uid: influxdb
+    # Only enabled with influx profile
+    # Comment out if not using InfluxDB
+
+  # ================================
+  # 🗄️ PostgreSQL - Direct Database Access
+  # ================================
+  - name: PostgreSQL
+    type: postgres
+    access: proxy
+    url: postgres:5432
+    database: energy_optimizer
+    user: energy_user
+    editable: true
+    jsonData:
+      sslmode: disable
+      postgresVersion: 1500
+      timescaledb: false
+    secureJsonData:
+      password: energy_password_2024
+    uid: postgres
+
+  # ================================
+  # 🔴 Redis - Cache Monitoring
+  # ================================
+  - name: Redis
+    type: redis-datasource
+    access: proxy
+    url: redis://redis:6379
+    editable: true
+    jsonData:
+      client: standalone
+      poolSize: 5
+      timeout: 10
+      pingInterval: 0
+      pipelineWindow: 0
+    uid: redis
+
+  # ================================
+  # 🌐 External APIs (Optional)
+  # ================================
+  - name: Energy Market API
+    type: json-api
+    access: proxy
+    url: https://api.energy-market.com/v1
+    editable: true
+    jsonData:
+      cacheDurationSeconds: 300
+      httpMethod: GET
+    secureJsonData:
+      apiKey: your-energy-market-api-key
+    uid: energy-market-api
+
+  # ================================
+  # ☁️ Weather API (Optional)
+  # ================================
+  - name: Weather API
+    type: json-api
+    access: proxy
+    url: https://api.openweathermap.org/data/2.5
+    editable: true
+    jsonData:
+      cacheDurationSeconds: 600
+      httpMethod: GET
+    secureJsonData:
+      apiKey: your-weather-api-key
+    uid: weather-api
+
+  # ================================
+  # 📊 TestData - Sample Data Source
+  # ================================
+  - name: TestData
+    type: testdata
+    access: proxy
+    editable: true
+    uid: testdata
+
+# ================================
+# 🔄 Datasource Deletion (if needed)
+# ================================
+# deleteDatasources:
+#   - name: old-datasource
+#     orgId: 1

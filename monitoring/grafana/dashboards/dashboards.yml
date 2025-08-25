@@ -1,0 +1,70 @@
+# 🏢⚡ Energy Optimizer Pro - Dashboard Provisioning
+# =================================================
+# Automated dashboard configuration
+
+apiVersion: 1
+
+# ================================
+# 📊 Dashboard Providers
+# ================================
+providers:
+  # ================================
+  # 📁 File-based Dashboards
+  # ================================
+  - name: 'Energy Optimizer Pro Dashboards'
+    type: file
+    disableDeletion: false
+    editable: true
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: true
+
+  # ================================
+  # 🏢 Building-Specific Dashboards
+  # ================================
+  - name: 'Building Dashboards'
+    type: file
+    disableDeletion: false
+    editable: true
+    folder: 'Buildings'
+    updateIntervalSeconds: 60
+    options:
+      path: /var/lib/grafana/dashboards/buildings
+
+  # ================================
+  # 🤖 ML Model Dashboards
+  # ================================
+  - name: 'ML Dashboards'
+    type: file
+    disableDeletion: false
+    editable: true
+    folder: 'Machine Learning'
+    updateIntervalSeconds: 120
+    options:
+      path: /var/lib/grafana/dashboards/ml
+
+  # ================================
+  # 🔧 Infrastructure Dashboards
+  # ================================
+  - name: 'Infrastructure Dashboards'
+    type: file
+    disableDeletion: false
+    editable: true
+    folder: 'Infrastructure'
+    updateIntervalSeconds: 30
+    options:
+      path: /var/lib/grafana/dashboards/infrastructure
+
+  # ================================
+  # 📊 Business Dashboards
+  # ================================
+  - name: 'Business Dashboards'
+    type: file
+    disableDeletion: false
+    editable: true
+    folder: 'Business Intelligence'
+    updateIntervalSeconds: 300
+    options:
+      path: /var/lib/grafana/dashboards/business

@@ -1,0 +1,597 @@
+# 🏢⚡ Energy Optimizer Pro - Alert Rules
+# ========================================
+
+groups:
+  # ================================
+  # ⚡ Energy System Alerts
+  # ================================
+  - name: energy-system-alerts
+    interval: 30s
+    rules:
+      # High energy consumption alert
+      - alert: HighEnergyConsumption
+        expr: energy_consumption_kwh > (avg_over_time(energy_consumption_kwh[24h]) * 1.5)
+        for: 15m
+        labels:
+          severity: warning
+          category: energy
+          team: energy
+        annotations:
+          summary: "High energy consumption detected in {{ $labels.building_name }}"
+          description: "Energy consumption ({{ $value }}kWh) is 50% above 24h average for building {{ $labels.building_name }}"
+          current_consumption: "{{ $value }}kWh"
+          threshold: "{{ query \"avg_over_time(energy_consumption_kwh[24h]) * 1.5\" | first | value }}kWh"
+          potential_savings: "€{{ query \"(energy_consumption_kwh - avg_over_time(energy_consumption_kwh[24h])) * 0.15\" | first | value }}"
+          runbook_url: "https://docs.energy-optimizer.com/runbooks/high-consumption"
+
+      # Energy consumption spike
+      - alert: EnergyConsumptionSpike
+        expr: increase(energy_consumption_kwh[5m]) > (avg_over_time(energy_consumption_kwh[24h]) * 0.2)
+        for: 5m
+        labels:
+          severity: critical
+          category: energy
+          team: energy
+        annotations:
+          summary: "Sudden energy consumption spike in {{ $labels.building_name }}"
+          description: "Energy consumption increased by {{ $value }}kWh in 5 minutes"
+          action: "Check equipment status and building systems immediately"
+
+      # Low efficiency score
+      - alert: LowEfficiencyScore
+        expr: building_efficiency_score < 0.6
+        for: 1h
+        labels:
+          severity: warning
+          category: energy
+          team: energy
+        annotations:
+          summary: "Low efficiency score for {{ $labels.building_name }}"
+          description: "Building efficiency score ({{ $value }}) below optimal threshold"
+          recommendation: "Consider running optimization analysis"
+
+      # Energy cost threshold exceeded
+      - alert: HighEnergyCost
+        expr: daily_energy_cost_eur > building_energy_budget_eur
+        for: 30m
+        labels:
+          severity: warning
+          category: energy
+          team: finance
+        annotations:
+          summary: "Daily energy cost exceeded budget for {{ $labels.building_name }}"
+          description: "Daily cost (€{{ $value }}) exceeded budget"
+          budget_exceeded: "€{{ query \"daily_energy_cost_eur - building_energy_budget_eur\" | first | value }}"
+
+  # ================================
+  # 🤖 Machine Learning Alerts
+  # ================================
+  - name: ml-model-alerts
+    interval: 1m
+    rules:
+      # Model accuracy degradation
+      - alert: ModelAccuracyDrop
+        expr: ml_model_accuracy < 0.85
+        for: 10m
+        labels:
+          severity: warning
+          category: ml
+          team: ml
+        annotations:
+          summary: "ML model accuracy dropped for {{ $labels.model_name }}"
+          description: "Model accuracy ({{ $value }}) below 85% threshold"
+          model_accuracy: "{{ $value }}%"
+          action: "Consider model retraining"
+          runbook_url: "https://docs.energy-optimizer.com/runbooks/model-accuracy"
+
+      # Model prediction latency
+      - alert: HighModelLatency
+        expr: ml_prediction_duration_seconds > 1
+        for: 5m
+        labels:
+          severity: warning
+          category: ml
+          team: ml
+        annotations:
+          summary: "High ML prediction latency for {{ $labels.model_name }}"
+          description: "Prediction latency ({{ $value }}s) above 1 second threshold"
+          current_latency: "{{ $value }}s"
+          
+      # Model drift detection
+      - alert: ModelDriftDetected
+        expr: ml_model_drift_score > 0.3
+        for: 30m
+        labels:
+          severity: critical
+          category: ml
+          team: ml
+        annotations:
+          summary: "Significant model drift detected for {{ $labels.model_name }}"
+          description: "Model drift score ({{ $value }}) indicates data distribution change"
+          drift_score: "{{ $value }}"
+          action: "Retrain model with recent data"
+
+      # Training job failures
+      - alert: ModelTrainingFailed
+        expr: ml_training_job_status == 0
+        for: 1m
+        labels:
+          severity: critical
+          category: ml
+          team: ml
+        annotations:
+          summary: "ML model training failed for {{ $labels.model_name }}"
+          description: "Model training job failed unexpectedly"
+          action: "Check training logs and data quality"
+
+  # ================================
+  # 🏗️ Infrastructure Alerts
+  # ================================
+  - name: infrastructure-alerts
+    interval: 30s
+    rules:
+      # High CPU usage
+      - alert: HighCPUUsage
+        expr: (100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 80
+        for: 5m
+        labels:
+          severity: warning
+          category: infrastructure
+          team: devops
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage ({{ $value }}%) above 80% threshold"
+          current_usage: "{{ $value }}%"
+
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          category: infrastructure
+          team: devops
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage ({{ $value }}%) above 85% threshold"
+          current_usage: "{{ $value }}%"
+
+      # Disk space low
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100 < 10
+        for: 15m
+        labels:
+          severity: critical
+          category: infrastructure
+          team: devops
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Available disk space ({{ $value }}%) below 10% threshold"
+          filesystem: "{{ $labels.mountpoint }}"
+          action: "Free up disk space immediately"
+
+      # Service down
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+          category: infrastructure
+          team: devops
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "Service {{ $labels.job }} on {{ $labels.instance }} is not responding"
+          action: "Investigate service status and restart if necessary"
+
+  # ================================
+  # 🌐 Application Alerts
+  # ================================
+  - name: application-alerts
+    interval: 30s
+    rules:
+      # High response time
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 10m
+        labels:
+          severity: warning
+          category: performance
+          team: devops
+        annotations:
+          summary: "High response time for {{ $labels.endpoint }}"
+          description: "95th percentile response time ({{ $value }}s) above 1 second"
+          endpoint: "{{ $labels.endpoint }}"
+          current_response_time: "{{ $value }}s"
+
+      # High error rate
+      - alert: HighErrorRate
+        expr: (rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m])) * 100 > 5
+        for: 5m
+        labels:
+          severity: critical
+          category: performance
+          team: devops
+        annotations:
+          summary: "High error rate for {{ $labels.service }}"
+          description: "Error rate ({{ $value }}%) above 5% threshold"
+          error_rate: "{{ $value }}%"
+          action: "Check application logs for error details"
+
+      # WebSocket connection issues
+      - alert: WebSocketConnectionDrop
+        expr: websocket_active_connections < 1
+        for: 2m
+        labels:
+          severity: warning
+          category: realtime
+          team: devops
+        annotations:
+          summary: "WebSocket connections dropped"
+          description: "No active WebSocket connections detected"
+          action: "Check WebSocket server status"
+
+  # ================================
+  # 🗄️ Database Alerts
+  # ================================
+  - name: database-alerts
+    interval: 30s
+    rules:
+      # Database connection issues
+      - alert: DatabaseConnectionHigh
+        expr: postgres_stat_database_numbackends > 80
+        for: 5m
+        labels:
+          severity: warning
+          category: database
+          team: database
+        annotations:
+          summary: "High number of database connections"
+          description: "Database connections ({{ $value }}) approaching limit"
+          current_connections: "{{ $value }}"
+
+      # Slow queries
+      - alert: SlowQueries
+        expr: rate(postgres_stat_database_blk_read_time[5m]) / rate(postgres_stat_database_blks_read[5m]) > 100
+        for: 10m
+        labels:
+          severity: warning
+          category: database
+          team: database
+        annotations:
+          summary: "Slow database queries detected"
+          description: "Average query time ({{ $value }}ms) above threshold"
+          action: "Analyze slow query log and optimize"
+
+      # Database size growth
+      - alert: DatabaseSizeGrowth
+        expr: increase(postgres_database_size_bytes[1h]) > 1e9  # 1GB per hour
+        for: 1h
+        labels:
+          severity: warning
+          category: database
+          team: database
+        annotations:
+          summary: "Rapid database growth detected"
+          description: "Database grew by {{ $value | humanize }}B in the last hour"
+          action: "Check for data retention policies"
+
+  # ================================
+  # 🔒 Security Alerts
+  # ================================
+  - name: security-alerts
+    interval: 10s
+    rules:
+      # Failed login attempts
+      - alert: HighFailedLogins
+        expr: rate(auth_failed_login_attempts_total[5m]) > 10
+        for: 1m
+        labels:
+          severity: critical
+          category: security
+          team: security
+        annotations:
+          summary: "High number of failed login attempts"
+          description: "{{ $value }} failed login attempts per second in the last 5 minutes"
+          source_ip: "{{ $labels.source_ip }}"
+          action: "Investigate potential brute force attack"
+
+      # Unusual API access patterns
+      - alert: UnusualAPIAccess
+        expr: rate(http_requests_total[5m]) > (avg_over_time(rate(http_requests_total[5m])[24h]) * 3)
+        for: 10m
+        labels:
+          severity: warning
+          category: security
+          team: security
+        annotations:
+          summary: "Unusual API access pattern detected"
+          description: "API request rate ({{ $value }}/s) is 3x higher than 24h average"
+          current_rate: "{{ $value }}/s"
+          action: "Review access logs for suspicious activity"
+
+      # Certificate expiration
+      - alert: SSLCertificateExpiring
+        expr: (ssl_certificate_expiry_seconds - time()) / 86400 < 30
+        for: 1h
+        labels:
+          severity: warning
+          category: security
+          team: devops
+        annotations:
+          summary: "SSL certificate expiring soon"
+          description: "SSL certificate expires in {{ $value }} days"
+          expiry_days: "{{ $value }}"
+          action: "Renew SSL certificate"
+
+  # ================================
+  # 🔄 Business Logic Alerts
+  # ================================
+  - name: business-alerts
+    interval: 1m
+    rules:
+      # Optimization job failures
+      - alert: OptimizationJobFailed
+        expr: optimization_job_status{status="failed"} == 1
+        for: 1m
+        labels:
+          severity: warning
+          category: business
+          team: energy
+        annotations:
+          summary: "Optimization job failed for {{ $labels.building_name }}"
+          description: "Optimization job {{ $labels.job_id }} failed"
+          building: "{{ $labels.building_name }}"
+          algorithm: "{{ $labels.algorithm }}"
+          action: "Check optimization logs and data quality"
+
+      # No recent energy data
+      - alert: NoRecentEnergyData
+        expr: time() - last_energy_reading_timestamp > 3600  # 1 hour
+        for: 5m
+        labels:
+          severity: critical
+          category: business
+          team: energy
+        annotations:
+          summary: "No recent energy data for {{ $labels.building_name }}"
+          description: "No energy data received for over 1 hour"
+          last_reading: "{{ $value | humanizeDuration }}ago"
+          action: "Check data collection sensors and network connectivity"
+
+      # Carbon emissions threshold
+      - alert: HighCarbonEmissions
+        expr: daily_carbon_emissions_kg > building_carbon_target_kg
+        for: 1h
+        labels:
+          severity: warning
+          category: sustainability
+          team: energy
+        annotations:
+          summary: "Daily carbon emissions above target for {{ $labels.building_name }}"
+          description: "Carbon emissions ({{ $value }}kg) exceeded daily target"
+          emissions: "{{ $value }}kg CO2"
+          target: "{{ $labels.building_carbon_target_kg }}kg CO2"
+
+  # ================================
+  # 🖥️ System Health Alerts
+  # ================================
+  - name: system-health-alerts
+    interval: 30s
+    rules:
+      # Container restart frequency
+      - alert: FrequentContainerRestarts
+        expr: rate(container_last_seen[1h]) > 0.1
+        for: 15m
+        labels:
+          severity: warning
+          category: infrastructure
+          team: devops
+        annotations:
+          summary: "Container {{ $labels.name }} restarting frequently"
+          description: "Container restarted {{ $value }} times in the last hour"
+          container: "{{ $labels.name }}"
+          action: "Check container logs for issues"
+
+      # Load balancer health
+      - alert: LoadBalancerDown
+        expr: nginx_up == 0
+        for: 1m
+        labels:
+          severity: critical
+          category: infrastructure
+          team: devops
+        annotations:
+          summary: "Load balancer is down"
+          description: "Nginx load balancer is not responding"
+          action: "Restart load balancer service immediately"
+
+      # Redis connection issues
+      - alert: RedisConnectionIssues
+        expr: redis_connected_clients < 1
+        for: 5m
+        labels:
+          severity: warning
+          category: infrastructure
+          team: devops
+        annotations:
+          summary: "Redis has no connected clients"
+          description: "Redis cache server has no active connections"
+          action: "Check Redis server status and application connectivity"
+
+  # ================================
+  # 📊 Performance Alerts
+  # ================================
+  - name: performance-alerts
+    interval: 30s
+    rules:
+      # API throughput drop
+      - alert: LowAPIThroughput
+        expr: rate(http_requests_total[5m]) < (avg_over_time(rate(http_requests_total[5m])[24h]) * 0.5)
+        for: 15m
+        labels:
+          severity: warning
+          category: performance
+          team: devops
+        annotations:
+          summary: "Low API throughput detected"
+          description: "API throughput ({{ $value }}/s) is 50% below 24h average"
+          current_throughput: "{{ $value }}/s"
+
+      # Queue size growing
+      - alert: TaskQueueSizeHigh
+        expr: celery_queue_size > 100
+        for: 10m
+        labels:
+          severity: warning
+          category: performance
+          team: devops
+        annotations:
+          summary: "Task queue size is high"
+          description: "Celery queue has {{ $value }} pending tasks"
+          queue_size: "{{ $value }}"
+          action: "Check worker availability and processing speed"
+
+      # Memory leak detection
+      - alert: MemoryLeakDetected
+        expr: increase(process_resident_memory_bytes[1h]) > 100e6  # 100MB growth per hour
+        for: 2h
+        labels:
+          severity: critical
+          category: performance
+          team: devops
+        annotations:
+          summary: "Potential memory leak in {{ $labels.service }}"
+          description: "Memory usage increased by {{ $value | humanize }}B in 2 hours"
+          memory_growth: "{{ $value | humanize }}B"
+          action: "Investigate memory usage and restart service if necessary"
+
+  # ================================
+  # 🏢 Building-Specific Alerts
+  # ================================
+  - name: building-alerts
+    interval: 1m
+    rules:
+      # Building offline
+      - alert: BuildingOffline
+        expr: building_online_status == 0
+        for: 5m
+        labels:
+          severity: critical
+          category: business
+          team: energy
+        annotations:
+          summary: "Building {{ $labels.building_name }} is offline"
+          description: "No data received from building sensors"
+          building: "{{ $labels.building_name }}"
+          last_seen: "{{ $labels.last_seen }}"
+          action: "Check building connectivity and sensor status"
+
+      # Temperature out of range
+      - alert: TemperatureOutOfRange
+        expr: building_temperature_celsius < 18 or building_temperature_celsius > 26
+        for: 30m
+        labels:
+          severity: warning
+          category: comfort
+          team: energy
+        annotations:
+          summary: "Temperature out of comfort range in {{ $labels.building_name }}"
+          description: "Temperature ({{ $value }}°C) outside 18-26°C comfort range"
+          current_temperature: "{{ $value }}°C"
+          action: "Adjust HVAC settings"
+
+      # High humidity
+      - alert: HighHumidity
+        expr: building_humidity_percent > 70
+        for: 1h
+        labels:
+          severity: warning
+          category: comfort
+          team: energy
+        annotations:
+          summary: "High humidity in {{ $labels.building_name }}"
+          description: "Humidity ({{ $value }}%) above 70% threshold"
+          current_humidity: "{{ $value }}%"
+          action: "Check ventilation and dehumidification systems"
+
+  # ================================
+  # 📱 Application-Specific Alerts
+  # ================================
+  - name: application-specific-alerts
+    interval: 30s
+    rules:
+      # Dashboard load time
+      - alert: SlowDashboardLoad
+        expr: dashboard_load_time_seconds > 5
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+          team: frontend
+        annotations:
+          summary: "Dashboard loading slowly"
+          description: "Dashboard load time ({{ $value }}s) above 5 second threshold"
+          load_time: "{{ $value }}s"
+          action: "Optimize dashboard queries and caching"
+
+      # Real-time update lag
+      - alert: RealTimeUpdateLag
+        expr: realtime_update_lag_seconds > 60
+        for: 2m
+        labels:
+          severity: warning
+          category: realtime
+          team: devops
+        annotations:
+          summary: "Real-time updates lagging"
+          description: "Real-time updates delayed by {{ $value }} seconds"
+          lag_seconds: "{{ $value }}s"
+          action: "Check WebSocket server and message queue"
+
+      # Data quality issues
+      - alert: DataQualityIssue
+        expr: data_quality_score < 0.9
+        for: 30m
+        labels:
+          severity: warning
+          category: data
+          team: energy
+        annotations:
+          summary: "Data quality issues detected for {{ $labels.building_name }}"
+          description: "Data quality score ({{ $value }}) below 90% threshold"
+          quality_score: "{{ $value }}"
+          action: "Check sensor calibration and data validation"
+
+  # ================================
+  # 💰 Cost and Budget Alerts
+  # ================================
+  - name: cost-alerts
+    interval: 1h
+    rules:
+      # Monthly budget exceeded
+      - alert: MonthlyBudgetExceeded
+        expr: monthly_energy_cost_eur > monthly_energy_budget_eur
+        for: 1h
+        labels:
+          severity: critical
+          category: budget
+          team: finance
+        annotations:
+          summary: "Monthly energy budget exceeded for {{ $labels.building_name }}"
+          description: "Monthly cost (€{{ $value }}) exceeded budget"
+          overspend: "€{{ query \"monthly_energy_cost_eur - monthly_energy_budget_eur\" | first | value }}"
+          action: "Implement immediate energy reduction measures"
+
+      # Unexpected cost increase
+      - alert: UnexpectedCostIncrease
+        expr: (daily_energy_cost_eur - avg_over_time(daily_energy_cost_eur[7d])) / avg_over_time(daily_energy_cost_eur[7d]) > 0.2
+        for: 6h
+        labels:
+          severity: warning
+          category: budget
+          team: finance
+        annotations:
+          summary: "Unexpected energy cost increase for {{ $labels.building_name }}"
+          description: "Daily cost 20% above 7-day average"
+          cost_increase: "{{ $value }}%"
+          action: "Investigate cause of cost increase"

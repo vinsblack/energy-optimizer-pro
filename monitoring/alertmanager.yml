@@ -1,0 +1,542 @@
+# 🏢⚡ Energy Optimizer Pro - Alertmanager Configuration
+# =====================================================
+# Smart alerting with multi-channel notifications
+
+# ================================
+# 🌍 Global Configuration
+# ================================
+global:
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: 'alerts@energy-optimizer.com'
+  smtp_auth_username: 'alerts@energy-optimizer.com'
+  smtp_auth_password: 'your-app-password'
+  smtp_require_tls: true
+  
+  # Slack webhook URL (set via environment variable)
+  slack_api_url: 'https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK'
+  
+  # Default notification settings
+  resolve_timeout: 5m
+
+# ================================
+# 📨 Notification Templates
+# ================================
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+# ================================
+# 🎯 Alert Routing Rules
+# ================================
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+  receiver: 'default'
+  
+  routes:
+    # ================================
+    # 🚨 Critical Alerts (Immediate)
+    # ================================
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      group_wait: 10s
+      group_interval: 1m
+      repeat_interval: 5m
+      continue: true
+    
+    # ================================
+    # ⚠️ High Priority Alerts
+    # ================================
+    - match:
+        severity: high
+      receiver: 'high-priority-alerts'
+      group_wait: 30s
+      group_interval: 2m
+      repeat_interval: 1h
+      continue: true
+    
+    # ================================
+    # 🟡 Medium Priority Alerts
+    # ================================
+    - match:
+        severity: medium
+      receiver: 'medium-priority-alerts'
+      group_wait: 2m
+      group_interval: 10m
+      repeat_interval: 6h
+    
+    # ================================
+    # ℹ️ Low Priority Alerts
+    # ================================
+    - match:
+        severity: low
+      receiver: 'low-priority-alerts'
+      group_wait: 5m
+      group_interval: 30m
+      repeat_interval: 24h
+    
+    # ================================
+    # 🏢 Building-Specific Alerts
+    # ================================
+    - match_re:
+        alertname: 'BuildingEnergyAnomaly|BuildingEquipmentFailure'
+      receiver: 'building-operations'
+      group_by: ['building_id', 'alertname']
+      group_wait: 1m
+      repeat_interval: 30m
+    
+    # ================================
+    # 🤖 ML Model Alerts
+    # ================================
+    - match_re:
+        alertname: 'MLModelAccuracyDrop|MLModelTrainingFailure'
+      receiver: 'ml-team'
+      group_by: ['model_name', 'alertname']
+      repeat_interval: 2h
+    
+    # ================================
+    # 💰 Financial Alerts
+    # ================================
+    - match_re:
+        alertname: 'HighEnergyCost|BudgetExceeded'
+      receiver: 'finance-team'
+      group_by: ['building_id', 'cost_category']
+      repeat_interval: 4h
+    
+    # ================================
+    # 🔒 Security Alerts
+    # ================================
+    - match_re:
+        alertname: 'SecurityBreach|UnauthorizedAccess|FailedLogin'
+      receiver: 'security-team'
+      group_wait: 5s
+      group_interval: 30s
+      repeat_interval: 15m
+
+# ================================
+# 📧 Notification Receivers
+# ================================
+receivers:
+  # ================================
+  # 📧 Default Receiver
+  # ================================
+  - name: 'default'
+    email_configs:
+      - to: 'alerts@energy-optimizer.com'
+        subject: '🏢⚡ Energy Optimizer Alert: {{ .GroupLabels.alertname }}'
+        body: |
+          🏢⚡ Energy Optimizer Pro Alert
+          
+          Alert: {{ .GroupLabels.alertname }}
+          Severity: {{ .CommonLabels.severity }}
+          Environment: {{ .CommonLabels.environment }}
+          
+          Description: {{ range .Alerts }}{{ .Annotations.description }}{{ end }}
+          
+          Summary: {{ range .Alerts }}{{ .Annotations.summary }}{{ end }}
+          
+          View Details: {{ .ExternalURL }}
+        headers:
+          priority: 'normal'
+
+  # ================================
+  # 🚨 Critical Alerts
+  # ================================
+  - name: 'critical-alerts'
+    email_configs:
+      - to: 'critical@energy-optimizer.com'
+        subject: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
+        body: |
+          🚨 CRITICAL ALERT - IMMEDIATE ACTION REQUIRED
+          
+          Alert: {{ .GroupLabels.alertname }}
+          Severity: {{ .CommonLabels.severity }}
+          Time: {{ .Alerts.FiringFor }}
+          
+          {{ range .Alerts }}
+          Description: {{ .Annotations.description }}
+          Runbook: {{ .Annotations.runbook_url }}
+          Dashboard: {{ .Annotations.dashboard_url }}
+          {{ end }}
+          
+          This is a critical system alert requiring immediate attention.
+        headers:
+          priority: 'high'
+    
+    slack_configs:
+      - api_url: '{{ .slack_api_url }}'
+        channel: '#critical-alerts'
+        username: 'Energy Optimizer Pro'
+        icon_emoji: ':rotating_light:'
+        title: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
+        text: |
+          🚨 **CRITICAL ALERT** - Immediate action required
+          
+          **Alert**: {{ .GroupLabels.alertname }}
+          **Severity**: {{ .CommonLabels.severity }}
+          **Environment**: {{ .CommonLabels.environment }}
+          **Time**: {{ .Alerts.FiringFor }}
+          
+          {{ range .Alerts }}
+          **Description**: {{ .Annotations.description }}
+          **Runbook**: {{ .Annotations.runbook_url }}
+          **Dashboard**: {{ .Annotations.dashboard_url }}
+          {{ end }}
+        actions:
+          - type: "button"
+            text: "🔧 View Dashboard"
+            url: "{{ .Alerts.dashboard_url }}"
+          - type: "button"
+            text: "📖 Runbook"
+            url: "{{ .Alerts.runbook_url }}"
+    
+    # SMS notifications for critical alerts (if configured)
+    webhook_configs:
+      - url: 'https://api.energy-optimizer.com/webhooks/sms-alert'
+        http_config:
+          basic_auth:
+            username: 'webhook_user'
+            password: 'webhook_password'
+
+  # ================================
+  # ⚠️ High Priority Alerts
+  # ================================
+  - name: 'high-priority-alerts'
+    email_configs:
+      - to: 'ops@energy-optimizer.com'
+        subject: '⚠️ HIGH PRIORITY: {{ .GroupLabels.alertname }}'
+        body: |
+          ⚠️ High Priority Alert
+          
+          Alert: {{ .GroupLabels.alertname }}
+          Severity: {{ .CommonLabels.severity }}
+          Building: {{ .CommonLabels.building_name }}
+          
+          {{ range .Alerts }}
+          Description: {{ .Annotations.description }}
+          Impact: {{ .Annotations.impact }}
+          Recommended Action: {{ .Annotations.action }}
+          {{ end }}
+        headers:
+          priority: 'high'
+    
+    slack_configs:
+      - api_url: '{{ .slack_api_url }}'
+        channel: '#ops-alerts'
+        username: 'Energy Optimizer Pro'
+        icon_emoji: ':warning:'
+        title: '⚠️ HIGH PRIORITY: {{ .GroupLabels.alertname }}'
+        text: |
+          ⚠️ **High Priority Alert**
+          
+          **Alert**: {{ .GroupLabels.alertname }}
+          **Building**: {{ .CommonLabels.building_name }}
+          **Environment**: {{ .CommonLabels.environment }}
+          
+          {{ range .Alerts }}
+          **Description**: {{ .Annotations.description }}
+          **Impact**: {{ .Annotations.impact }}
+          **Action**: {{ .Annotations.action }}
+          {{ end }}
+
+  # ================================
+  # 🟡 Medium Priority Alerts
+  # ================================
+  - name: 'medium-priority-alerts'
+    email_configs:
+      - to: 'monitoring@energy-optimizer.com'
+        subject: '🟡 MEDIUM: {{ .GroupLabels.alertname }}'
+        body: |
+          🟡 Medium Priority Alert
+          
+          Alert: {{ .GroupLabels.alertname }}
+          Affected Service: {{ .CommonLabels.service }}
+          
+          {{ range .Alerts }}
+          Description: {{ .Annotations.description }}
+          {{ end }}
+        headers:
+          priority: 'normal'
+    
+    slack_configs:
+      - api_url: '{{ .slack_api_url }}'
+        channel: '#monitoring'
+        username: 'Energy Optimizer Pro'
+        icon_emoji: ':large_yellow_circle:'
+        title: '🟡 MEDIUM: {{ .GroupLabels.alertname }}'
+
+  # ================================
+  # 🔵 Low Priority Alerts
+  # ================================
+  - name: 'low-priority-alerts'
+    slack_configs:
+      - api_url: '{{ .slack_api_url }}'
+        channel: '#monitoring-low'
+        username: 'Energy Optimizer Pro'
+        icon_emoji: ':information_source:'
+        title: '🔵 INFO: {{ .GroupLabels.alertname }}'
+        text: |
+          ℹ️ **Informational Alert**
+          
+          **Alert**: {{ .GroupLabels.alertname }}
+          **Service**: {{ .CommonLabels.service }}
+          
+          {{ range .Alerts }}
+          **Description**: {{ .Annotations.description }}
+          {{ end }}
+
+  # ================================
+  # 🏢 Building Operations Team
+  # ================================
+  - name: 'building-operations'
+    email_configs:
+      - to: 'facilities@energy-optimizer.com'
+        subject: '🏢 Building Alert: {{ .CommonLabels.building_name }}'
+        body: |
+          🏢 Building Operations Alert
+          
+          Building: {{ .CommonLabels.building_name }}
+          Alert: {{ .GroupLabels.alertname }}
+          Location: {{ .CommonLabels.building_location }}
+          
+          {{ range .Alerts }}
+          Issue: {{ .Annotations.description }}
+          Potential Impact: {{ .Annotations.impact }}
+          Recommended Action: {{ .Annotations.action }}
+          
+          Equipment Affected: {{ .Labels.equipment_type }}
+          Zone: {{ .Labels.zone }}
+          {{ end }}
+        headers:
+          priority: 'high'
+    
+    slack_configs:
+      - api_url: '{{ .slack_api_url }}'
+        channel: '#building-ops'
+        username: 'Energy Optimizer Pro'
+        icon_emoji: ':office:'
+        title: '🏢 {{ .CommonLabels.building_name }}: {{ .GroupLabels.alertname }}'
+        text: |
+          🏢 **Building Operations Alert**
+          
+          **Building**: {{ .CommonLabels.building_name }}
+          **Location**: {{ .CommonLabels.building_location }}
+          **Alert**: {{ .GroupLabels.alertname }}
+          
+          {{ range .Alerts }}
+          **Issue**: {{ .Annotations.description }}
+          **Impact**: {{ .Annotations.impact }}
+          **Action**: {{ .Annotations.action }}
+          **Equipment**: {{ .Labels.equipment_type }}
+          **Zone**: {{ .Labels.zone }}
+          {{ end }}
+
+  # ================================
+  # 🤖 ML Team Alerts
+  # ================================
+  - name: 'ml-team'
+    email_configs:
+      - to: 'ml-team@energy-optimizer.com'
+        subject: '🤖 ML Alert: {{ .GroupLabels.alertname }}'
+        body: |
+          🤖 Machine Learning Alert
+          
+          Model: {{ .CommonLabels.model_name }}
+          Alert: {{ .GroupLabels.alertname }}
+          
+          {{ range .Alerts }}
+          Issue: {{ .Annotations.description }}
+          Current Accuracy: {{ .Labels.current_accuracy }}
+          Threshold: {{ .Labels.accuracy_threshold }}
+          
+          Recommended Action: {{ .Annotations.action }}
+          {{ end }}
+    
+    slack_configs:
+      - api_url: '{{ .slack_api_url }}'
+        channel: '#ml-alerts'
+        username: 'Energy Optimizer Pro'
+        icon_emoji: ':robot_face:'
+        title: '🤖 ML Alert: {{ .GroupLabels.alertname }}'
+
+  # ================================
+  # 💰 Finance Team Alerts
+  # ================================
+  - name: 'finance-team'
+    email_configs:
+      - to: 'finance@energy-optimizer.com'
+        subject: '💰 Cost Alert: {{ .GroupLabels.alertname }}'
+        body: |
+          💰 Financial Alert
+          
+          Alert: {{ .GroupLabels.alertname }}
+          Building: {{ .CommonLabels.building_name }}
+          
+          {{ range .Alerts }}
+          Current Cost: €{{ .Labels.current_cost }}
+          Budget: €{{ .Labels.budget_limit }}
+          Overage: €{{ .Labels.cost_overage }}
+          
+          Period: {{ .Labels.cost_period }}
+          Category: {{ .Labels.cost_category }}
+          {{ end }}
+    
+    slack_configs:
+      - api_url: '{{ .slack_api_url }}'
+        channel: '#finance-alerts'
+        username: 'Energy Optimizer Pro'
+        icon_emoji: ':moneybag:'
+        title: '💰 Cost Alert: {{ .GroupLabels.alertname }}'
+
+  # ================================
+  # 🔒 Security Team Alerts
+  # ================================
+  - name: 'security-team'
+    email_configs:
+      - to: 'security@energy-optimizer.com'
+        subject: '🔒 Security Alert: {{ .GroupLabels.alertname }}'
+        body: |
+          🔒 SECURITY ALERT - IMMEDIATE ATTENTION REQUIRED
+          
+          Alert: {{ .GroupLabels.alertname }}
+          Severity: {{ .CommonLabels.severity }}
+          Source IP: {{ .CommonLabels.source_ip }}
+          
+          {{ range .Alerts }}
+          Event: {{ .Annotations.description }}
+          User: {{ .Labels.username }}
+          Endpoint: {{ .Labels.endpoint }}
+          Time: {{ .StartsAt }}
+          
+          Immediate Actions Required:
+          {{ .Annotations.action }}
+          {{ end }}
+        headers:
+          priority: 'urgent'
+    
+    slack_configs:
+      - api_url: '{{ .slack_api_url }}'
+        channel: '#security-alerts'
+        username: 'Energy Optimizer Pro'
+        icon_emoji: ':shield:'
+        title: '🔒 SECURITY: {{ .GroupLabels.alertname }}'
+        text: |
+          🔒 **SECURITY ALERT** - Immediate attention required
+          
+          **Alert**: {{ .GroupLabels.alertname }}
+          **Severity**: {{ .CommonLabels.severity }}
+          **Source**: {{ .CommonLabels.source_ip }}
+          
+          {{ range .Alerts }}
+          **Event**: {{ .Annotations.description }}
+          **User**: {{ .Labels.username }}
+          **Endpoint**: {{ .Labels.endpoint }}
+          **Time**: {{ .StartsAt }}
+          {{ end }}
+        actions:
+          - type: "button"
+            text: "🔍 Investigate"
+            url: "https://monitoring.energy-optimizer.com/d/security"
+
+# ================================
+# 🔇 Inhibition Rules
+# ================================
+inhibit_rules:
+  # ================================
+  # 🏢 Building Maintenance Mode
+  # ================================
+  - source_match:
+      alertname: 'BuildingMaintenanceMode'
+    target_match_re:
+      alertname: 'Building.*'
+    equal: ['building_id']
+  
+  # ================================
+  # 🚨 Critical Inhibits Lower Priority
+  # ================================
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'high'
+    equal: ['service', 'instance']
+  
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'medium'
+    equal: ['service', 'instance']
+  
+  # ================================
+  # 🔧 Service Down Inhibits Component Alerts
+  # ================================
+  - source_match:
+      alertname: 'ServiceDown'
+    target_match_re:
+      alertname: '(HighResponseTime|HighErrorRate|DatabaseConnectionError)'
+    equal: ['service']
+
+# ================================
+# 🎯 Alert Grouping Configuration
+# ================================
+group_by_all: false
+
+# ================================
+# 🕒 Time-Based Routing (Optional)
+# ================================
+# Example: Different handling during business hours
+time_intervals:
+  - name: 'business_hours'
+    time_intervals:
+      - times:
+        - start_time: '09:00'
+          end_time: '18:00'
+        weekdays: ['monday:friday']
+        location: 'Europe/Rome'
+  
+  - name: 'after_hours'
+    time_intervals:
+      - times:
+        - start_time: '18:01'
+          end_time: '08:59'
+        weekdays: ['monday:friday']
+        location: 'Europe/Rome'
+      - times:
+        - start_time: '00:00'
+          end_time: '23:59'
+        weekdays: ['saturday', 'sunday']
+        location: 'Europe/Rome'
+
+# ================================
+# 🎯 Advanced Routing with Time
+# ================================
+# Uncomment to enable time-based routing:
+#
+# route:
+#   routes:
+#     - match:
+#         severity: critical
+#       receiver: 'critical-alerts'
+#       active_time_intervals: ['business_hours']
+#       group_wait: 10s
+#       repeat_interval: 5m
+#     
+#     - match:
+#         severity: critical
+#       receiver: 'critical-alerts-oncall'
+#       active_time_intervals: ['after_hours']
+#       group_wait: 5s
+#       repeat_interval: 2m
+
+# ================================
+# 📊 Mute Configuration
+# ================================
+mute_time_intervals:
+  - name: 'planned_maintenance'
+    time_intervals:
+      - times:
+        - start_time: '02:00'
+          end_time: '04:00'
+        weekdays: ['sunday']
+        location: 'Europe/Rome'

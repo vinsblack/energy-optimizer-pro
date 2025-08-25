@@ -1,0 +1,516 @@
+# 🏢⚡ Energy Optimizer Pro - Application Alert Rules
+# =================================================
+# Smart alerts for application performance and health
+
+groups:
+  # ================================
+  # ⚡ Application Performance Alerts
+  # ================================
+  - name: application.performance
+    interval: 30s
+    rules:
+      
+      # 🐍 Backend API Response Time
+      - alert: HighAPIResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="energy-optimizer-backend"}[5m])) > 0.2
+        for: 2m
+        labels:
+          severity: high
+          service: backend
+          category: performance
+        annotations:
+          summary: "Backend API response time is high"
+          description: "95th percentile response time is {{ $value }}s, which exceeds 200ms threshold"
+          impact: "Users experiencing slow dashboard loading and API responses"
+          action: "Check backend logs and database performance. Consider scaling if needed."
+          runbook_url: "https://docs.energy-optimizer.com/runbooks/high-response-time"
+          dashboard_url: "https://monitoring.energy-optimizer.com/d/api-performance"
+
+      # 🎨 Frontend Page Load Time
+      - alert: HighFrontendLoadTime
+        expr: avg(frontend_page_load_duration_seconds{page="dashboard"}) > 0.8
+        for: 5m
+        labels:
+          severity: medium
+          service: frontend
+          category: performance
+        annotations:
+          summary: "Frontend dashboard loading slowly"
+          description: "Dashboard load time is {{ $value }}s, exceeding 800ms target"
+          impact: "Poor user experience, potential user abandonment"
+          action: "Check frontend bundle size, CDN performance, and API response times"
+          dashboard_url: "https://monitoring.energy-optimizer.com/d/frontend-performance"
+
+      # 🤖 ML Model Prediction Time
+      - alert: SlowMLPredictions
+        expr: histogram_quantile(0.90, rate(ml_prediction_duration_seconds_bucket[5m])) > 0.1
+        for: 3m
+        labels:
+          severity: medium
+          service: ml-engine
+          category: performance
+        annotations:
+          summary: "ML predictions taking too long"
+          description: "90th percentile ML prediction time is {{ $value }}s, exceeding 100ms target"
+          impact: "Delayed optimization recommendations and real-time insights"
+          action: "Check model complexity, consider model optimization or hardware scaling"
+          dashboard_url: "https://monitoring.energy-optimizer.com/d/ml-performance"
+
+  # ================================
+  # 🔧 Application Health Alerts
+  # ================================
+  - name: application.health
+    interval: 15s
+    rules:
+      
+      # 🚨 Service Down
+      - alert: ServiceDown
+        expr: up == 0
+        for: 30s
+        labels:
+          severity: critical
+          category: availability
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "Service {{ $labels.job }} has been down for more than 30 seconds"
+          impact: "Critical service unavailable, affecting user operations"
+          action: "Immediately investigate service status, check logs, restart if necessary"
+          runbook_url: "https://docs.energy-optimizer.com/runbooks/service-down"
+
+      # 📊 High Error Rate
+      - alert: HighErrorRate
+        expr: (rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: high
+          service: "{{ $labels.job }}"
+          category: reliability
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} for service {{ $labels.job }}"
+          impact: "Users experiencing application errors and failures"
+          action: "Check application logs, database connectivity, and recent deployments"
+          dashboard_url: "https://monitoring.energy-optimizer.com/d/error-rates"
+
+      # 🗄️ Database Connection Issues
+      - alert: DatabaseConnectionError
+        expr: database_connections_active / database_connections_max > 0.8
+        for: 1m
+        labels:
+          severity: high
+          service: database
+          category: infrastructure
+        annotations:
+          summary: "Database connection pool near exhaustion"
+          description: "Database connections are {{ $value | humanizePercentage }} of maximum"
+          impact: "Application may start rejecting requests due to database connectivity"
+          action: "Check for connection leaks, optimize queries, consider scaling database"
+          runbook_url: "https://docs.energy-optimizer.com/runbooks/database-connections"
+
+      # 🔴 Redis Connection Issues
+      - alert: RedisConnectionError
+        expr: redis_connected_clients == 0
+        for: 30s
+        labels:
+          severity: high
+          service: redis
+          category: infrastructure
+        annotations:
+          summary: "Redis connection lost"
+          description: "No Redis clients connected for {{ $value }}s"
+          impact: "Session management and caching unavailable"
+          action: "Check Redis service status and network connectivity"
+
+  # ================================
+  # 🏢 Energy-Specific Alerts
+  # ================================
+  - name: energy.monitoring
+    interval: 60s
+    rules:
+      
+      # ⚡ High Energy Consumption
+      - alert: HighEnergyConsumption
+        expr: |
+          (
+            energy_consumption_current_kw{building_type!="manufacturing"} / 
+            energy_consumption_baseline_kw > 1.5
+          ) and (
+            energy_consumption_current_kw > 100
+          )
+        for: 10m
+        labels:
+          severity: medium
+          category: energy
+          building_id: "{{ $labels.building_id }}"
+          building_name: "{{ $labels.building_name }}"
+        annotations:
+          summary: "Unusual energy consumption in {{ $labels.building_name }}"
+          description: "Energy consumption is {{ $value | humanizePercentage }} above baseline ({{ $labels.energy_consumption_current_kw }}kW vs {{ $labels.energy_consumption_baseline_kw }}kW baseline)"
+          impact: "Higher than expected energy costs, potential equipment issues"
+          action: "Investigate HVAC settings, check for equipment malfunctions, review recent changes"
+          dashboard_url: "https://monitoring.energy-optimizer.com/d/building-energy?var-building={{ $labels.building_id }}"
+
+      # 💰 Budget Exceeded
+      - alert: EnergyBudgetExceeded
+        expr: energy_cost_daily_eur > energy_budget_daily_eur
+        for: 1h
+        labels:
+          severity: high
+          category: financial
+          building_id: "{{ $labels.building_id }}"
+          building_name: "{{ $labels.building_name }}"
+        annotations:
+          summary: "Daily energy budget exceeded for {{ $labels.building_name }}"
+          description: "Daily energy cost €{{ $labels.energy_cost_daily_eur }} exceeds budget of €{{ $labels.energy_budget_daily_eur }}"
+          impact: "Monthly budget at risk, potential cost overruns"
+          action: "Review energy usage patterns, implement emergency conservation measures"
+          dashboard_url: "https://monitoring.energy-optimizer.com/d/cost-analysis?var-building={{ $labels.building_id }}"
+
+      # 🌍 High Carbon Emissions
+      - alert: HighCarbonEmissions
+        expr: |
+          (
+            carbon_emissions_hourly_kg / carbon_emissions_baseline_kg > 1.3
+          ) and (
+            carbon_emissions_hourly_kg > 50
+          )
+        for: 15m
+        labels:
+          severity: medium
+          category: sustainability
+          building_id: "{{ $labels.building_id }}"
+          building_name: "{{ $labels.building_name }}"
+        annotations:
+          summary: "High carbon emissions detected in {{ $labels.building_name }}"
+          description: "Carbon emissions {{ $value }}kg/h are 30% above baseline"
+          impact: "Sustainability goals at risk, increased environmental impact"
+          action: "Review energy sources, optimize renewable energy usage"
+          dashboard_url: "https://monitoring.energy-optimizer.com/d/sustainability?var-building={{ $labels.building_id }}"
+
+  # ================================
+  # 🤖 Machine Learning Alerts
+  # ================================
+  - name: ml.models
+    interval: 300s  # 5 minute intervals for ML metrics
+    rules:
+      
+      # 📉 Model Accuracy Drop
+      - alert: MLModelAccuracyDrop
+        expr: ml_model_accuracy < 0.85
+        for: 15m
+        labels:
+          severity: high
+          service: ml-engine
+          category: ml-model
+          model_name: "{{ $labels.model_name }}"
+        annotations:
+          summary: "ML model accuracy below threshold"
+          description: "Model {{ $labels.model_name }} accuracy dropped to {{ $value | humanizePercentage }}"
+          impact: "Reduced optimization effectiveness, inaccurate predictions"
+          action: "Retrain model with recent data, check for data drift, validate input features"
+          runbook_url: "https://docs.energy-optimizer.com/runbooks/ml-accuracy-drop"
+          dashboard_url: "https://monitoring.energy-optimizer.com/d/ml-models?var-model={{ $labels.model_name }}"
+
+      # 🔄 Model Training Failure
+      - alert: MLModelTrainingFailure
+        expr: increase(ml_training_failures_total[1h]) > 0
+        for: 5m
+        labels:
+          severity: high
+          service: ml-engine
+          category: ml-training
+        annotations:
+          summary: "ML model training failed"
+          description: "{{ $value }} model training failures in the last hour"
+          impact: "Models not updating with latest data, outdated predictions"
+          action: "Check training logs, validate data quality, review resource availability"
+          dashboard_url: "https://monitoring.energy-optimizer.com/d/ml-training"
+
+      # 📊 Data Drift Detection
+      - alert: DataDriftDetected
+        expr: ml_data_drift_score > 0.7
+        for: 30m
+        labels:
+          severity: medium
+          service: ml-engine
+          category: data-quality
+          model_name: "{{ $labels.model_name }}"
+        annotations:
+          summary: "Data drift detected in {{ $labels.model_name }}"
+          description: "Data drift score is {{ $value }}, indicating significant changes in input patterns"
+          impact: "Model predictions may become less accurate over time"
+          action: "Analyze data distribution changes, consider model retraining"
+          dashboard_url: "https://monitoring.energy-optimizer.com/d/data-drift?var-model={{ $labels.model_name }}"
+
+  # ================================
+  # 📊 Business Logic Alerts
+  # ================================
+  - name: business.rules
+    interval: 120s
+    rules:
+      
+      # 🏢 Equipment Malfunction
+      - alert: EquipmentMalfunction
+        expr: |
+          (
+            equipment_efficiency_percentage < 0.6
+          ) and (
+            equipment_operating_hours_daily > 8
+          )
+        for: 20m
+        labels:
+          severity: high
+          category: equipment
+          building_id: "{{ $labels.building_id }}"
+          equipment_type: "{{ $labels.equipment_type }}"
+          equipment_id: "{{ $labels.equipment_id }}"
+        annotations:
+          summary: "Equipment malfunction detected"
+          description: "{{ $labels.equipment_type }} efficiency dropped to {{ $value | humanizePercentage }} in {{ $labels.building_name }}"
+          impact: "Increased energy consumption, potential equipment damage"
+          action: "Schedule immediate maintenance inspection, consider equipment shutdown if critical"
+          dashboard_url: "https://monitoring.energy-optimizer.com/d/equipment?var-equipment={{ $labels.equipment_id }}"
+
+      # 🌡️ Temperature Anomaly
+      - alert: TemperatureAnomaly
+        expr: |
+          abs(
+            building_temperature_celsius - building_temperature_setpoint_celsius
+          ) > 3
+        for: 15m
+        labels:
+          severity: medium
+          category: comfort
+          building_id: "{{ $labels.building_id }}"
+          zone: "{{ $labels.zone }}"
+        annotations:
+          summary: "Temperature anomaly in {{ $labels.building_name }}"
+          description: "Zone {{ $labels.zone }} temperature is {{ $value }}°C away from setpoint"
+          impact: "Occupant comfort affected, potential energy waste"
+          action: "Check HVAC system operation, verify sensor calibration"
+          dashboard_url: "https://monitoring.energy-optimizer.com/d/comfort?var-building={{ $labels.building_id }}"
+
+      # 📈 Optimization Opportunity
+      - alert: OptimizationOpportunity
+        expr: energy_savings_potential_percentage > 0.15
+        for: 1h
+        labels:
+          severity: low
+          category: optimization
+          building_id: "{{ $labels.building_id }}"
+        annotations:
+          summary: "Significant optimization opportunity identified"
+          description: "{{ $labels.building_name }} has {{ $value | humanizePercentage }} energy savings potential"
+          impact: "Missing opportunity for cost and energy savings"
+          action: "Review AI recommendations, implement suggested optimizations"
+          dashboard_url: "https://monitoring.energy-optimizer.com/d/optimization?var-building={{ $labels.building_id }}"
+
+  # ================================
+  # 👥 User Experience Alerts
+  # ================================
+  - name: user.experience
+    interval: 60s
+    rules:
+      
+      # 👥 High User Error Rate
+      - alert: HighUserErrorRate
+        expr: |
+          (
+            rate(frontend_user_errors_total[5m]) / 
+            rate(frontend_page_views_total[5m])
+          ) > 0.02
+        for: 5m
+        labels:
+          severity: medium
+          service: frontend
+          category: user-experience
+        annotations:
+          summary: "High user error rate detected"
+          description: "User error rate is {{ $value | humanizePercentage }}, exceeding 2% threshold"
+          impact: "Users experiencing application errors and poor experience"
+          action: "Check frontend logs, review recent UI changes, validate API connectivity"
+          dashboard_url: "https://monitoring.energy-optimizer.com/d/user-experience"
+
+      # 📱 Mobile Performance Issues
+      - alert: MobilePerformanceIssue
+        expr: avg(frontend_mobile_load_time_seconds) > 1.5
+        for: 10m
+        labels:
+          severity: medium
+          service: frontend
+          category: mobile
+        annotations:
+          summary: "Mobile performance degradation"
+          description: "Mobile load time is {{ $value }}s, exceeding 1.5s target"
+          impact: "Poor mobile user experience"
+          action: "Optimize mobile assets, check CDN performance, review responsive design"
+
+      # 🔐 Failed Login Attempts
+      - alert: HighFailedLoginRate
+        expr: rate(auth_failed_logins_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: medium
+          service: auth
+          category: security
+        annotations:
+          summary: "High rate of failed login attempts"
+          description: "{{ $value }} failed login attempts per second"
+          impact: "Potential security threat or user experience issue"
+          action: "Check for brute force attacks, review user support tickets"
+          dashboard_url: "https://monitoring.energy-optimizer.com/d/security"
+
+  # ================================
+  # 📊 Data Quality Alerts
+  # ================================
+  - name: data.quality
+    interval: 300s  # 5 minute intervals for data quality
+    rules:
+      
+      # 📊 Missing Data Points
+      - alert: MissingEnergyData
+        expr: |
+          (
+            time() - max(energy_data_last_update_timestamp) > 900
+          ) and (
+            energy_data_expected_frequency_seconds < 600
+          )
+        for: 5m
+        labels:
+          severity: high
+          category: data-quality
+          building_id: "{{ $labels.building_id }}"
+        annotations:
+          summary: "Energy data missing for {{ $labels.building_name }}"
+          description: "No energy data received for {{ $value }}s, expected every {{ $labels.energy_data_expected_frequency_seconds }}s"
+          impact: "Real-time monitoring unavailable, optimization accuracy reduced"
+          action: "Check sensor connectivity, validate data pipeline, investigate network issues"
+          dashboard_url: "https://monitoring.energy-optimizer.com/d/data-pipeline?var-building={{ $labels.building_id }}"
+
+      # 🔍 Data Validation Errors
+      - alert: DataValidationErrors
+        expr: increase(data_validation_errors_total[10m]) > 10
+        for: 5m
+        labels:
+          severity: medium
+          category: data-quality
+        annotations:
+          summary: "High data validation error rate"
+          description: "{{ $value }} data validation errors in the last 10 minutes"
+          impact: "Data quality issues may affect analysis accuracy"
+          action: "Review data sources, check sensor calibration, validate data formats"
+          dashboard_url: "https://monitoring.energy-optimizer.com/d/data-quality"
+
+      # 📈 Anomalous Energy Readings
+      - alert: AnomalousEnergyReadings
+        expr: |
+          abs(
+            energy_consumption_kw - 
+            prediction(energy_consumption_kw[1h:5m] offset 5m)[5m:]
+          ) / energy_consumption_kw > 0.3
+        for: 15m
+        labels:
+          severity: low
+          category: anomaly-detection
+          building_id: "{{ $labels.building_id }}"
+        annotations:
+          summary: "Anomalous energy readings detected"
+          description: "Energy consumption in {{ $labels.building_name }} deviates {{ $value | humanizePercentage }} from predicted values"
+          impact: "Potential sensor issues or unusual building operations"
+          action: "Validate sensor readings, check building operations, investigate environmental factors"
+          dashboard_url: "https://monitoring.energy-optimizer.com/d/anomaly-detection?var-building={{ $labels.building_id }}"
+
+  # ================================
+  # 💾 Resource Utilization Alerts
+  # ================================
+  - name: resources.utilization
+    interval: 30s
+    rules:
+      
+      # 💾 High Memory Usage
+      - alert: HighMemoryUsage
+        expr: |
+          (
+            container_memory_usage_bytes{name=~"energy_optimizer_.*"} / 
+            container_spec_memory_limit_bytes
+          ) > 0.8
+        for: 5m
+        labels:
+          severity: high
+          service: "{{ $labels.name }}"
+          category: resources
+        annotations:
+          summary: "High memory usage in {{ $labels.name }}"
+          description: "Memory usage is {{ $value | humanizePercentage }} of limit"
+          impact: "Risk of service degradation or crashes"
+          action: "Check for memory leaks, consider scaling resources, optimize code"
+          dashboard_url: "https://monitoring.energy-optimizer.com/d/container-resources"
+
+      # 💻 High CPU Usage
+      - alert: HighCPUUsage
+        expr: |
+          rate(container_cpu_usage_seconds_total{name=~"energy_optimizer_.*"}[5m]) > 0.8
+        for: 10m
+        labels:
+          severity: medium
+          service: "{{ $labels.name }}"
+          category: resources
+        annotations:
+          summary: "High CPU usage in {{ $labels.name }}"
+          description: "CPU usage is {{ $value | humanizePercentage }}"
+          impact: "Performance degradation, slower response times"
+          action: "Identify CPU-intensive operations, optimize algorithms, consider scaling"
+
+      # 💽 Low Disk Space
+      - alert: LowDiskSpace
+        expr: |
+          (
+            node_filesystem_avail_bytes{mountpoint="/"} / 
+            node_filesystem_size_bytes{mountpoint="/"}
+          ) < 0.1
+        for: 5m
+        labels:
+          severity: critical
+          category: storage
+        annotations:
+          summary: "Critical: Low disk space"
+          description: "Available disk space is {{ $value | humanizePercentage }}"
+          impact: "Risk of application crashes, data loss, service unavailability"
+          action: "Immediately clean up logs, temporary files, old backups. Scale storage if needed."
+          runbook_url: "https://docs.energy-optimizer.com/runbooks/disk-space"
+
+  # ================================
+  # 🔄 Background Job Alerts
+  # ================================
+  - name: background.jobs
+    interval: 120s
+    rules:
+      
+      # 🔄 Celery Queue Backup
+      - alert: CeleryQueueBackup
+        expr: celery_queue_length > 100
+        for: 10m
+        labels:
+          severity: high
+          service: celery
+          category: background-jobs
+        annotations:
+          summary: "Celery queue backup detected"
+          description: "{{ $value }} tasks in queue, processing may be delayed"
+          impact: "Background operations delayed, ML training affected"
+          action: "Check worker status, scale workers, investigate slow tasks"
+          dashboard_url: "https://monitoring.energy-optimizer.com/d/celery"
+
+      # ⏰ Scheduled Task Failure
+      - alert: ScheduledTaskFailure
+        expr: increase(celery_task_failures_total{task=~".*scheduled.*"}[1h]) > 0
+        for: 15m
+        labels:
+          severity: medium
+          service: celery
+          category: scheduled-tasks
+        annotations:
+          summary: "Scheduled task failures detected"
+          description: "{{ $value }} scheduled task failures in the last hour"
+          impact: "Automated operations not running, data processing delays"
+          action: "Check task logs, validate dependencies, review task definitions"

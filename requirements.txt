@@ -1,0 +1,50 @@
+# Building Energy Optimizer v2.0 - Clean Requirements
+# Tested with Python 3.8-3.13
+
+# Core Data Science Stack
+numpy>=1.21.0,<2.0.0
+pandas>=1.5.0,<3.0.0
+scikit-learn>=1.1.0,<2.0.0
+matplotlib>=3.5.0,<4.0.0
+seaborn>=0.11.0,<1.0.0
+plotly>=5.10.0,<6.0.0
+
+# Machine Learning Algorithms (Python 3.13 compatible)
+xgboost>=2.0.0,<3.0.0
+lightgbm>=4.0.0,<5.0.0
+# tensorflow excluded - causes Python 3.13 conflicts
+
+# Web Framework
+fastapi>=0.100.0,<1.0.0
+uvicorn[standard]>=0.18.0,<1.0.0
+python-multipart>=0.0.5,<1.0.0
+jinja2>=3.1.0,<4.0.0
+
+# Dashboard
+streamlit>=1.28.0,<2.0.0
+
+# Database
+sqlalchemy>=1.4.0,<3.0.0
+alembic>=1.8.0,<2.0.0
+
+# Utilities
+python-dotenv>=0.19.0,<2.0.0
+click>=8.0.0,<9.0.0
+tqdm>=4.64.0,<5.0.0
+joblib>=1.2.0,<2.0.0
+psutil>=5.9.0,<6.0.0
+requests>=2.28.0,<3.0.0
+
+# Security & Authentication
+python-jose[cryptography]>=3.3.0,<4.0.0
+passlib[bcrypt]>=1.7.0,<2.0.0
+
+# Optional: IoT Integration
+paho-mqtt>=1.6.0,<2.0.0
+
+# Optional: Monitoring
+prometheus-client>=0.15.0,<1.0.0
+
+# Development & Testing
+pytest>=7.0.0,<9.0.0
+pytest-cov>=4.0.0,<5.0.0

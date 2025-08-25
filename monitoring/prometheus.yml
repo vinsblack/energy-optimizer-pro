@@ -1,0 +1,234 @@
+# 🏢⚡ Energy Optimizer Pro - Prometheus Configuration
+# =================================================
+# Advanced metrics collection and alerting rules
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'energy-optimizer-pro'
+    environment: 'production'
+
+# ================================
+# 🚨 Rule Files
+# ================================
+rule_files:
+  - "rules/*.yml"
+
+# ================================
+# 🚨 Alertmanager Configuration
+# ================================
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+# ================================
+# 🎯 Scrape Configurations
+# ================================
+scrape_configs:
+  # ================================
+  # 📊 Prometheus Self-Monitoring
+  # ================================
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 5s
+    metrics_path: /metrics
+
+  # ================================
+  # 🐍 Backend API Metrics
+  # ================================
+  - job_name: 'energy-optimizer-backend'
+    static_configs:
+      - targets: ['backend:8000']
+    scrape_interval: 10s
+    metrics_path: /metrics
+    basic_auth:
+      username: 'prometheus'
+      password: 'monitoring_password'
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'python_.*'
+        target_label: service
+        replacement: 'backend'
+
+  # ================================
+  # 🎨 Frontend Metrics (Custom)
+  # ================================
+  - job_name: 'energy-optimizer-frontend'
+    static_configs:
+      - targets: ['frontend:3000']
+    scrape_interval: 30s
+    metrics_path: /api/metrics
+    scrape_timeout: 10s
+
+  # ================================
+  # 🗄️ PostgreSQL Metrics
+  # ================================
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    scrape_interval: 30s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'postgres-main'
+
+  # ================================
+  # 🔴 Redis Metrics
+  # ================================
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 30s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'redis-main'
+
+  # ================================
+  # 🌐 Nginx Metrics
+  # ================================
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx-exporter:9113']
+    scrape_interval: 30s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'nginx-loadbalancer'
+
+  # ================================
+  # 🖥️ System Metrics (Node Exporter)
+  # ================================
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 15s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'host-system'
+
+  # ================================
+  # 🐳 Container Metrics (cAdvisor)
+  # ================================
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    scrape_interval: 15s
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'container_.*'
+        target_label: service
+        replacement: 'containers'
+
+  # ================================
+  # 🔄 Celery Worker Metrics
+  # ================================
+  - job_name: 'celery-worker'
+    static_configs:
+      - targets: ['celery-worker:9540']
+    scrape_interval: 20s
+    metrics_path: /metrics
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'celery-workers'
+
+  # ================================
+  # ⚡ Energy Data Metrics (Custom)
+  # ================================
+  - job_name: 'energy-metrics'
+    static_configs:
+      - targets: ['backend:8000']
+    scrape_interval: 60s  # Less frequent for energy data
+    metrics_path: /api/metrics/energy
+    params:
+      format: ['prometheus']
+    basic_auth:
+      username: 'energy_monitor'
+      password: 'energy_metrics_password'
+
+  # ================================
+  # 🤖 ML Model Metrics
+  # ================================
+  - job_name: 'ml-models'
+    static_configs:
+      - targets: ['backend:8000']
+    scrape_interval: 120s  # Models don't change frequently
+    metrics_path: /api/metrics/ml
+    params:
+      format: ['prometheus']
+    basic_auth:
+      username: 'ml_monitor'
+      password: 'ml_metrics_password'
+
+  # ================================
+  # 🔍 Blackbox Monitoring (External)
+  # ================================
+  - job_name: 'blackbox'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+        - https://energy-optimizer.com
+        - https://api.energy-optimizer.com
+        - https://monitoring.energy-optimizer.com
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # ================================
+  # 📊 Custom Business Metrics
+  # ================================
+  - job_name: 'business-metrics'
+    static_configs:
+      - targets: ['backend:8000']
+    scrape_interval: 300s  # 5 minutes for business metrics
+    metrics_path: /api/metrics/business
+    params:
+      format: ['prometheus']
+      aggregation: ['5m']
+    basic_auth:
+      username: 'business_monitor'
+      password: 'business_metrics_password'
+
+# ================================
+# 📊 Remote Storage (Optional)
+# ================================
+# remote_write:
+#   - url: "https://prometheus-remote-storage.example.com/api/v1/write"
+#     basic_auth:
+#       username: 'remote_user'
+#       password: 'remote_password'
+#     queue_config:
+#       max_samples_per_send: 1000
+#       max_shards: 200
+#       capacity: 2500
+
+# ================================
+# 📥 Remote Read (Optional)
+# ================================
+# remote_read:
+#   - url: "https://prometheus-remote-storage.example.com/api/v1/read"
+#     basic_auth:
+#       username: 'remote_user'
+#       password: 'remote_password'
+
+# ================================
+# 🔧 Storage Configuration
+# ================================
+storage:
+  tsdb:
+    retention.time: 30d
+    retention.size: 10GB
+    min-block-duration: 2h
+    max-block-duration: 25h

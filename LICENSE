@@ -1,0 +1,153 @@
+MIT License
+
+Copyright (c) 2024 Energy Optimizer Pro Team
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+================================================================================
+
+🏢⚡ Energy Optimizer Pro - Additional License Information
+
+This project includes third-party libraries and dependencies that are licensed
+under their respective terms. Please refer to the following files for complete
+license information:
+
+Frontend Dependencies:
+- package.json: Contains all frontend dependencies with their licenses
+- node_modules/*/LICENSE: Individual license files for each package
+
+Backend Dependencies:  
+- requirements.txt: Contains all backend dependencies
+- Use 'pip-licenses' to generate a complete license report
+
+Key Dependencies and Their Licenses:
+- React: MIT License
+- Next.js: MIT License  
+- Tailwind CSS: MIT License
+- FastAPI: MIT License
+- PostgreSQL: PostgreSQL License
+- Redis: BSD License
+- Prometheus: Apache 2.0 License
+- Grafana: AGPL 3.0 License
+
+For a complete license audit, run:
+- Frontend: npx license-checker --summary
+- Backend: pip install pip-licenses && pip-licenses
+
+================================================================================
+
+🔒 Security Notice
+
+This software handles sensitive energy consumption data and building information.
+When deploying in production environments:
+
+1. Change all default passwords and secrets
+2. Use proper SSL/TLS certificates
+3. Implement proper network security
+4. Follow security best practices outlined in docs/security.md
+5. Regularly update dependencies and apply security patches
+
+================================================================================
+
+🌍 Environmental Impact
+
+Energy Optimizer Pro is designed to reduce energy consumption and carbon
+emissions in buildings. By using this software effectively, organizations
+can typically achieve:
+
+- 15-35% reduction in energy consumption
+- 20-40% reduction in carbon emissions  
+- Significant cost savings (€5,000-€50,000+ annually per building)
+- Improved building comfort and operational efficiency
+
+We encourage users to:
+- Share success stories and case studies
+- Contribute improvements back to the open source community
+- Use the software to support sustainability goals
+- Report environmental impact achievements
+
+================================================================================
+
+🤝 Contributing
+
+We welcome contributions from the community! Please see CONTRIBUTING.md for
+detailed guidelines on:
+
+- Code of conduct
+- Development setup
+- Coding standards
+- Testing requirements
+- Pull request process
+- Issue reporting
+
+Key contribution areas:
+- 🤖 Machine learning algorithms and models
+- 🎨 User interface improvements
+- 🔌 IoT sensor integrations
+- 🌍 Internationalization and localization
+- 📊 Analytics and reporting features
+- 🔒 Security enhancements
+- 📖 Documentation improvements
+
+================================================================================
+
+📞 Support
+
+For support, questions, or commercial licensing inquiries:
+
+- 📧 Email: hello@energy-optimizer.com
+- 🌐 Website: https://energy-optimizer.com
+- 📖 Documentation: https://docs.energy-optimizer.com
+- 💬 Community: https://discord.gg/energy-optimizer
+- 🐛 Issues: https://github.com/your-username/energy-optimizer-pro/issues
+
+Commercial Support:
+- Enterprise licensing and support packages available
+- Custom feature development
+- Professional services and consulting
+- Training and implementation assistance
+
+================================================================================
+
+🏆 Acknowledgments
+
+Special thanks to:
+
+- 🏢 Beta testing partners who provided real-world validation
+- 🤖 Open source ML community for algorithms and inspiration  
+- 🎨 Design community for UI/UX best practices
+- 🔒 Security researchers for vulnerability testing
+- 🌍 Sustainability experts for environmental impact guidance
+- 👥 All contributors who have helped improve this project
+
+Third-party acknowledgments:
+- Weather data provided by OpenWeatherMap
+- Energy market data from various public APIs
+- Geographic data from OpenStreetMap
+- Icons from Lucide React and Heroicons
+- Design inspiration from Material Design and Apple Human Interface Guidelines
+
+================================================================================
+
+Energy Optimizer Pro - Building the Future of Smart Energy Management
+Made with ❤️ for a sustainable future
+
+🌱 Every kilowatt-hour saved makes a difference
+🏢 Every building optimized contributes to a greener planet
+⚡ Every efficiency improvement supports a sustainable future

@@ -100,6 +100,61 @@ open http://localhost:3000
 
 ---
 
+## 📸 **Screenshots & Features Preview**
+
+<div align="center">
+
+### 🏠 **Main Dashboard**
+*Real-time energy monitoring and system overview*
+
+![Main Dashboard](docs/images/dashboard.png)
+
+---
+
+### 📊 **Advanced Analytics**
+*Deep insights into energy consumption patterns*
+
+![Analytics](docs/images/Analytics.png)
+
+---
+
+### 🏢 **Building Management**
+*Comprehensive building portfolio management*
+
+![Buildings](docs/images/Buildings.png)
+
+---
+
+### 📈 **Data Visualization**
+*Interactive charts and data exploration*
+
+![Data](docs/images/Data.png)
+
+---
+
+### ⚡ **Optimization Engine**
+*AI-powered energy optimization recommendations*
+
+![Optimize](docs/images/Optimize.png)
+
+---
+
+### 📋 **Detailed Reports**
+*Comprehensive reporting and analytics*
+
+![Reports](docs/images/Reports.png)
+
+---
+
+### 📱 **Executive Dashboard**
+*High-level overview for decision makers*
+
+![Executive Dashboard](docs/images/Dashboard2.png)
+
+</div>
+
+---
+
 ## 🏗️ **System Architecture**
 
 ```mermaid

@@ -2,7 +2,6 @@
 
 <div align="center">
 
-![Energy Optimizer Pro Logo](https://via.placeholder.com/400x120/4F46E5/FFFFFF?text=Energy+Optimizer+Pro)
 
 ### **The Ultimate AI-Powered Building Energy Management Platform**
 

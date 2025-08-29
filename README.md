@@ -1,7 +1,7 @@
 # 🏢⚡ Energy Optimizer Pro
 
 <div align="center">
-[![Sponsor](https://img.shields.io/badge/Sponsor-vinsblack-blueviolet?logo=github)](https://github.com/sponsors/vinsblack)
+
 
 ### **The Ultimate AI-Powered Building Energy Management Platform**
 
@@ -14,7 +14,7 @@
 **Transform your buildings with cutting-edge AI technology**  
 *Save 15-35% on energy costs • Reduce CO2 emissions by 25% • ROI in 6-18 months*
 
-[🚀 **Get Started**](#-quick-start) • [📖 **Documentation**](docs/) 
+[🚀 **Get Started**](#-quick-start) • [📖 **Documentation**](docs/) [![Sponsor](https://img.shields.io/badge/Sponsor-vinsblack-blueviolet?logo=github)](https://github.com/sponsors/vinsblack)
 
 </div>
 

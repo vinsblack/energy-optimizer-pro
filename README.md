@@ -14,7 +14,7 @@
 **Transform your buildings with cutting-edge AI technology**  
 *Save 15-35% on energy costs • Reduce CO2 emissions by 25% • ROI in 6-18 months*
 
-[🚀 **Get Started**](#-quick-start) • [📖 **Documentation**](docs/) • [🎮 **Live Demo**](https://demo.energy-optimizer.com) • [💬 **Community**](https://discord.gg/energy-optimizer)
+[🚀 **Get Started**](#-quick-start) • [📖 **Documentation**](docs/) 
 
 </div>
 

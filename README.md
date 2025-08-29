@@ -1,7 +1,7 @@
 # 🏢⚡ Energy Optimizer Pro
 
 <div align="center">
-
+[![Sponsor](https://img.shields.io/badge/Sponsor-vinsblack-blueviolet?logo=github)](https://github.com/sponsors/vinsblack)
 
 ### **The Ultimate AI-Powered Building Energy Management Platform**
 

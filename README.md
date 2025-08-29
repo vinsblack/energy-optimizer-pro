@@ -398,11 +398,6 @@ graph TB
 
 ---
 
-## 🎮 **Live Demo & Examples**
-
-### 🌐 **Try It Now**
-🎮 **[Interactive Demo](https://demo.energy-optimizer.com)**  
-*Full-featured demo with sample data • No registration required*
 
 ### 📊 **Sample Scenarios**
 - **🏢 Corporate Office**: 50,000 sqft office building optimization

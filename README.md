@@ -1100,11 +1100,11 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ### 🎯 **Quick Links**
 
-[🚀 Get Started](#-quick-start) • [📖 Documentation](docs/) • [🎮 Demo](https://demo.energy-optimizer.com) • [💬 Community](https://discord.gg/energy-optimizer) • [🐛 Issues](https://github.com/your-username/energy-optimizer-pro/issues) • [💡 Discussions](https://github.com/your-username/energy-optimizer-pro/discussions)
+[🚀 Get Started](#-quick-start) • [📖 Documentation](docs/) •  • [💬 Community](https://discord.gg/energy-optimizer) • [🐛 Issues](https://github.com/your-username/energy-optimizer-pro/issues) • [💡 Discussions](https://github.com/your-username/energy-optimizer-pro/discussions)
 
 ---
 
-**🏢⚡ Made with ❤️ for a sustainable future**
+**🏢⚡ Made with ❤️ for a sustainable future **      [![Sponsor](https://img.shields.io/badge/Sponsor-vinsblack-blueviolet?logo=github)](https://github.com/sponsors/vinsblack)
 
 *Building the future of smart energy management, one building at a time.*
 

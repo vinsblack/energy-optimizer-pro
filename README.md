@@ -1093,17 +1093,6 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
-## 📬 **Contact**
-
-<div align="center">
-
-### 🏢⚡ **Energy Optimizer Pro Team**
-
-**📧 Email**: [hello@energy-optimizer.com](mailto:hello@energy-optimizer.com)  
-**🌐 Website**: [energy-optimizer.com](https://energy-optimizer.com)  
-**💬 Discord**: [Join our community](https://discord.gg/energy-optimizer)  
-**🐦 Twitter**: [@EnergyOptimizerPro](https://twitter.com/EnergyOptimizerPro)  
-
 **📍 Location**: Milan, Italy 🇮🇹
 
 ---

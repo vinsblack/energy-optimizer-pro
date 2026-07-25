@@ -1,311 +1,151 @@
 # Energy Optimizer Pro
 
-**AI-Powered Building Energy Management System**
+Energy Optimizer Pro is a portfolio and demonstration project for exploring
+building-energy data, machine-learning models, optimization heuristics, APIs,
+and dashboard concepts.
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/vinsblack/energy-optimizer-pro)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/vinsblack/energy-optimizer-pro/actions)
-[![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen.svg)](https://github.com/vinsblack/energy-optimizer-pro)
+The repository is intended for technical evaluation and experimentation. It is
+not a production energy-management service, and its generated recommendations
+must not be treated as validated savings, financial projections, or operational
+advice.
 
-Transform building energy consumption with machine learning. Achieve 15-35% energy savings, reduce CO2 emissions by up to 25%, and reach ROI in 6-18 months.
+## What is implemented
 
-[Get Started](#quick-start) | [Documentation](docs/) | [API Reference](http://localhost:8000/docs)
+- Python utilities for generating synthetic building-energy data
+- Data preprocessing and model training with scikit-learn-compatible estimators
+- Random Forest, XGBoost, and LightGBM model selection
+- Prediction and rule-based optimization suggestions
+- Model persistence with Joblib
+- FastAPI implementations exposing demonstration optimization endpoints
+- Streamlit and Next.js dashboard source code
+- Unit and API test modules
+- Example Docker, monitoring, and CI configuration
 
----
+Some infrastructure definitions are incomplete or reference files that are not
+present. See [README_CLAIMS_AUDIT.md](README_CLAIMS_AUDIT.md) for an evidence-based
+review of the original documentation.
 
-## Overview
+## Scope and limitations
 
-Energy Optimizer Pro is a full-stack platform for monitoring, analyzing, and optimizing building energy consumption using advanced ML algorithms. It supports multi-building portfolios, real-time monitoring, predictive analytics, and automated optimization recommendations.
+This project works primarily with synthetic or user-supplied data. Percentages
+returned by optimization suggestions are heuristic estimates encoded in the
+demonstration logic; they are not measured outcomes from deployed buildings.
 
-### Key Capabilities
+The repository does not provide evidence for production uptime, return on
+investment, guaranteed energy savings, fixed performance figures, enterprise
+readiness, or a specific test-coverage percentage.
 
-- **Real-time monitoring** with WebSocket-based live dashboards
-- **ML-powered optimization** using XGBoost, LightGBM, and Random Forest
-- **Predictive analytics** for energy usage forecasting and anomaly detection
-- **Executive reporting** with PDF exports, cost tracking, and sustainability metrics
-- **Role-based access control** with JWT authentication and audit logging
-- **Progressive Web App** with mobile support and offline capability
+The checked-in Docker Compose and frontend definitions are architectural
+examples rather than a verified one-command deployment. In particular, the
+frontend source is present without its package manifest, and some Compose
+services reference modules or files that are not included.
 
----
+## Repository structure
 
-## Architecture
-
-```mermaid
-graph TB
-    subgraph Frontend
-        A[Next.js 14] --> B[React Components]
-        B --> C[Tailwind CSS]
-        A --> D[PWA]
-    end
-    subgraph API
-        E[FastAPI] --> F[JWT Auth]
-        E --> G[WebSocket]
-        E --> H[REST Endpoints]
-    end
-    subgraph ML
-        I[XGBoost] --> J[Predictions]
-        I --> K[Optimization]
-        I --> L[Anomaly Detection]
-    end
-    subgraph Data
-        M[PostgreSQL] --> N[Time Series]
-        O[Redis] --> P[Cache / Sessions]
-    end
-    subgraph Monitoring
-        R[Prometheus] --> S[Grafana]
-        R --> T[Alertmanager]
-    end
-    A --> E
-    E --> I
-    E --> M
-    E --> O
-    I --> M
-    E --> R
+```text
+api/                              FastAPI demonstration API
+backend/                          Extended API experiments and requirements
+dashboard/                        Streamlit dashboard
+examples/                         Python usage examples
+frontend/                         Next.js UI source (package manifest absent)
+monitoring/                       Prometheus, Grafana, and alert examples
+src/building_energy_optimizer/    Core optimizer and supporting utilities
+tests/                            Optimizer and API tests
+docker-compose*.yml               Infrastructure examples
 ```
 
----
+## Local evaluation
 
-## Quick Start
+The most direct evaluation path is the Python package and its tests.
 
-### Docker Compose (Recommended)
+### Prerequisites
+
+- Python 3.11
+- A virtual environment
+
+### Setup
 
 ```bash
 git clone https://github.com/vinsblack/energy-optimizer-pro.git
 cd energy-optimizer-pro
 
-./start.sh install
-./start.sh start
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m pip install -e .
 ```
 
-The application will be available at `http://localhost:3000`.
+On Windows PowerShell, activate the environment with:
 
-### Default Credentials
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
 
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@energy-optimizer.com | admin123 |
-| Analyst | analyst@energy-optimizer.com | analyst123 |
-| Manager | manager@energy-optimizer.com | manager123 |
-
----
-
-## Manual Setup
-
-### Prerequisites
+### Run the tests
 
 ```bash
-sudo apt update && sudo apt install -y \
-    git curl wget \
-    python3.11 python3.11-venv python3-pip \
-    nodejs npm \
-    docker.io docker-compose \
-    postgresql-client redis-tools
+pytest tests -v
 ```
 
-### Database
+The repository contains multiple generations of API and optimizer code. Test
+results can depend on the selected Python version and dependency resolution;
+review failures before relying on a specific component.
+
+### Run an example
 
 ```bash
-docker-compose up -d postgres redis
-
-cd backend
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-alembic upgrade head
+python examples/basic_usage.py
 ```
 
-### Frontend
+### Run the demonstration API
 
 ```bash
-cd frontend
-npm install
-npm run build
-npm start
+uvicorn api.main:app --reload
 ```
 
-### Backend
+The OpenAPI interface is available at <http://localhost:8000/docs>.
+
+### Run the Streamlit dashboard
 
 ```bash
-cd backend
-source venv/bin/activate
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+streamlit run dashboard/app.py
 ```
 
-### Sample Data
+## Technology represented
 
-```bash
-cd backend
-python scripts/seed_data.py --buildings 5 --days 30
-```
+- **Python and data:** Python, pandas, NumPy, scikit-learn, XGBoost, LightGBM
+- **Backend:** FastAPI, Pydantic, Joblib
+- **UI experiments:** Streamlit and Next.js source
+- **Infrastructure examples:** Docker Compose, PostgreSQL, Redis, Prometheus,
+  Grafana, and Alertmanager
+- **Quality tooling:** Pytest and GitHub Actions configuration
 
----
-
-## Technology Stack
-
-**Frontend:** Next.js 14, Tailwind CSS, Recharts, Zustand, Framer Motion, PWA
-
-**Backend:** FastAPI, PostgreSQL 15, Redis, Celery, Scikit-learn, XGBoost, LightGBM
-
-**Infrastructure:** Docker, Nginx, Prometheus, Grafana, Alertmanager, GitHub Actions, Let's Encrypt
-
----
-
-## System Requirements
-
-| Component | Minimum | Recommended |
-|-----------|---------|-------------|
-| OS | Linux, macOS, Windows 10+ (WSL2) | Ubuntu 22.04 LTS / macOS 13+ |
-| RAM | 8 GB | 16 GB+ |
-| Storage | 20 GB | SSD, 100 GB+ |
-| Docker | 20.0+ | Latest, 8 GB+ allocation |
-| Python | 3.11+ | 3.11+ |
-| Node.js | 18.0+ | 18.0+ |
-
----
-
-## Usage
-
-### Running Optimization via API
-
-```python
-import requests
-
-auth = requests.post('http://localhost:8000/auth/login', json={
-    'email': 'admin@energy-optimizer.com',
-    'password': 'admin123'
-})
-token = auth.json()['access_token']
-
-response = requests.post(
-    'http://localhost:8000/api/optimize',
-    headers={'Authorization': f'Bearer {token}'},
-    json={
-        'building_id': 'your-building-id',
-        'algorithm': 'xgboost',
-        'optimization_target': 'cost_reduction'
-    }
-)
-print(f"Job started: {response.json()['job_id']}")
-```
-
-### Generating Reports
-
-```bash
-cd backend
-python scripts/generate_report.py \
-    --building-id "your-building-id" \
-    --start-date "2024-07-01" \
-    --end-date "2024-07-31" \
-    --format pdf \
-    --output "reports/july-energy-report.pdf"
-```
-
----
-
-## Management Commands
-
-```bash
-./start.sh install          # Full installation
-./start.sh start            # Start all services
-./start.sh stop             # Stop all services
-./start.sh restart          # Restart services
-./start.sh status           # Service status
-./start.sh logs [service]   # View logs
-./start.sh test             # Run test suite
-./start.sh benchmark        # Performance benchmarks
-./start.sh database backup  # Database backup
-./start.sh database restore # Database restore
-```
-
----
-
-## Monitoring
-
-```bash
-./start.sh monitoring start
-```
-
-| Service | URL | Credentials |
-|---------|-----|-------------|
-| Grafana | http://localhost:3001 | admin / admin123 |
-| Prometheus | http://localhost:9090 | — |
-| Alertmanager | http://localhost:9093 | — |
-| Jaeger | http://localhost:16686 | — |
-
-### Performance Targets
-
-| Metric | Target | Measured |
-|--------|--------|----------|
-| API Response Time | < 200 ms | 156 ms |
-| Dashboard Load | < 800 ms | 687 ms |
-| ML Prediction | < 100 ms | 73 ms |
-| Uptime | 99.9% | 99.97% |
-
----
-
-## Testing
-
-```bash
-./start.sh test                     # All tests
-
-cd frontend && npm test             # Frontend unit tests
-cd frontend && npm run test:e2e     # E2E tests
-
-cd backend && pytest tests/ -v      # Backend unit tests
-cd backend && pytest --cov=app      # Coverage report
-
-./start.sh benchmark                # Performance benchmarks
-```
-
----
+The presence of an integration or configuration file does not imply that the
+complete service is production-ready or validated end to end.
 
 ## Security
 
-- Multi-factor authentication (TOTP, SMS)
-- AES-256 encryption for sensitive data
-- Role-based access control with granular permissions
-- Comprehensive audit logging
-- Automated vulnerability scanning
+The repository includes authentication helpers and security-related
+dependencies, but it should not be treated as a security-reviewed application.
+Example credentials and development secrets in configuration files must never be
+used in a deployed environment.
 
----
+No claim is made here that MFA, application-level AES-256 encryption,
+production-grade RBAC, or persistent audit logging is complete.
 
-## Roadmap
+## Data and recommendation disclaimer
 
-- Native mobile applications (iOS, Android)
-- Multi-tenant SaaS architecture
-- Expanded IoT sensor support
-- LLM-powered natural language queries
-- Carbon trading integration
-- Multi-language support (Italian, Spanish, German, French)
+Generated datasets, forecasts, recommendation percentages, and cost estimates
+are illustrative. Validate models with representative data and involve qualified
+energy professionals before making operational or financial decisions.
 
----
+## Known repository issue
 
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Commit changes: `git commit -m 'Add feature'`
-4. Push: `git push origin feature/your-feature`
-5. Open a Pull Request
-
----
-
-## Support
-
-- **Email:** vincenzo.gallo77@hotmail.com
-- **Issues:** [GitHub Issues](https://github.com/vinsblack/energy-optimizer-pro/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/vinsblack/energy-optimizer-pro/discussions)
-
----
+Several tracked `:Zone.Identifier` metadata files prevent a normal Windows
+checkout. They are documented in the claims audit and should be removed in a
+separate maintenance commit from Linux or WSL.
 
 ## License
 
-MIT License — see [LICENSE](LICENSE) for details.
-
----
-
-## Acknowledgments
-
-Built with Next.js, FastAPI, PostgreSQL, Redis, XGBoost, LightGBM, Docker, Prometheus, and Grafana.
-
-> *This is a portfolio/demo project. Performance metrics are based on industry benchmarks and illustrative scenarios.*
+This repository includes an MIT License. Third-party dependencies and datasets
+remain subject to their own terms.
